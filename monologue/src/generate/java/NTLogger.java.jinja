@@ -1,0 +1,166 @@
+package monologue;
+
+
+{%for t in geomTypes%}
+import edu.wpi.first.math.geometry.{{t.TypeName}};
+{%endfor%}
+import edu.wpi.first.networktables.NTSendable;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.util.datalog.*;
+import edu.wpi.first.networktables.*;
+import edu.wpi.first.util.struct.Struct;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import java.util.function.*;
+import edu.wpi.first.util.function.FloatSupplier;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.function.Supplier;
+
+import edu.wpi.first.wpilibj.Timer;
+
+public class NTLogger extends GenericLogger {
+    public NTLogger() {super();}
+
+    private final NetworkTableInstance table = NetworkTableInstance.getDefault();
+
+    private final Map<String, Publisher> publishers = new HashMap<String, Publisher>();
+
+    {%for t in types%}
+    public void put(String entryName, {{t.java.ValueType}} value) {
+        var genericPublisher = publishers.get(entryName);
+        {{t.java.EntryName}}Publisher publisher = null;
+        if (genericPublisher == null){
+            var topic = table.get{{t.java.EntryName}}Topic(entryName);
+            {%if t.TypeName == 'Raw'%}
+            publisher = topic.publish("raw");
+            {%else%}
+            publisher = topic.publish();{%endif%}
+            publishers.put(entryName, publisher);
+        } else if (genericPublisher instanceof {{t.java.EntryName}}Publisher) {
+            publisher = ({{t.java.EntryName}}Publisher) genericPublisher;
+        }
+        if (publisher != null) {
+            {%if t.TypeName == 'IntegerArray'%}
+            long[] array = new long[value.length];
+            for (int i = 0; i < value.length; i++) {
+                array[i] = (long) value[i];
+            }
+            publisher.set(array);
+            {%else%}
+            publisher.set(value);
+            {%endif%}
+        }
+    }
+
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, int level) {
+        var topic = table.get{{t.java.EntryName}}Topic(entryName);
+        {%if t.TypeName == 'Raw'%}
+        var publisher = topic.publish("raw");
+        {%else%}
+        var publisher = topic.publish();
+        {%endif%}
+            {%if t.TypeName == 'IntegerArray'%}
+            map.put(entryName, field((timestamp)->{
+                int[] value = valueSupplier.get();
+                long[] array = new long[value.length];
+                for (int i = 0; i < value.length; i++) {
+                    array[i] = (long) value[i];
+                }
+                publisher.set(array, timestamp);
+            }, publisher::close, level));
+            {%else%}
+            map.put(entryName, field((timestamp)->publisher.set(valueSupplier.get(), timestamp), publisher::close, level));
+        {%endif%}
+        
+    }
+
+    @Override
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
+        add{{t.TypeName}}(entryName, valueSupplier, 0);
+    }
+    {%endfor%}
+
+    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier, int level) {
+        var topic = table.getStructTopic(entryName, struct);
+        var publisher = topic.publish();
+        map.put(entryName, field((timestamp->publisher.set(valueSupplier.get(), timestamp)), publisher::close, level));
+    }
+
+    public <R> void putStruct(String entryName, Struct<R> struct, R value) {
+        var genericPublisher = publishers.get(entryName);
+        StructPublisher<R> publisher = null;
+        if (genericPublisher == null){
+            var topic = table.getStructTopic(entryName, struct);
+            publisher = topic.publish();
+            publishers.put(entryName, publisher);
+        } else if (genericPublisher instanceof StructPublisher<?>) {
+            publisher = (StructPublisher<R>) genericPublisher;
+        }
+        if (publisher != null) {
+            publisher.set(value);
+        }
+    }
+
+    // public void put(String entryName, Translation2d value) {
+    //     var topic = table.getDoubleArrayTopic(entryName);
+    //     topic.setRetained(true);
+    //     var publisher = new Translation2dPublisher(topic);
+    //     publisher.set(value);
+    //     publisher.close();
+    // }
+
+    public void addNetworkTable(NetworkTable table) {
+        // NetworkTableInstance.getDefault()
+        //     .startEntryDataLog(table, table.getPath(), table.getPath());
+    }
+
+    public void addNetworkTable(NetworkTable table, String dlPath) {
+        // NetworkTableInstance.getDefault()
+        //     .startEntryDataLog(table, table.getPath(), dlPath);
+    }
+
+    public void addSendable(String path, Sendable sendable) {        
+        var builder = new SendableBuilderImpl();
+        builder.setTable(table.getTable(path));
+        sendable.initSendable(builder);
+        builder.startListeners();
+        table.getTable(path).getEntry(".controllable").setBoolean(false);
+        sendables.add(builder);
+    }
+
+    public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot, int level) {
+        switch (type) {
+            {%for t in types%}
+            case {{t.TypeName}}:
+                if (oneShot) {
+                    put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}());
+                } else {
+                    add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
+                }
+                break;
+            {%endfor%}
+            case Sendable:
+                addSendable(path, (Sendable) supplier.get());
+                break;
+            {%for t in geomTypes%}
+            case {{t.TypeName}}:
+                if (oneShot) {
+                    put(path, ({{t.TypeName}}) supplier.get());
+                } else {
+                    add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get(), level);
+                }
+                break;
+            {%endfor%}
+            default:
+                throw new IllegalArgumentException("Invalid data type");
+        }
+    }
+}

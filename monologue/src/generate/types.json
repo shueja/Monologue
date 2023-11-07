@@ -1,0 +1,173 @@
+[
+  {
+    "TypeName": "Boolean",
+    "TypeString": "\"boolean\"",
+    "java": {
+      "ValueType": "boolean",
+      "WrapValueType": "Boolean",
+      "Supplier": "Supplier<Boolean>",
+      "EmptyValue": "false",
+      "ConsumerFunctionPackage": "edu.wpi.first.util.function",
+      "FunctionTypePrefix": "Boolean",
+      "EntryName": "Boolean",
+      "SupplierGet" : "get"
+    }
+  },
+  {
+    "TypeName": "Integer",
+    "TypeString": "\"int\"",
+    "java": {
+      "ValueType": "int",
+      "WrapValueType": "Integer",
+      "Supplier": "Supplier<Integer>",
+      "EmptyValue": "0",
+      "FunctionTypePrefix": "Integer",
+      "EntryName": "Integer",
+      "SupplierGet" : "get"
+    }
+  },
+
+  {
+    "TypeName": "Long",
+    "TypeString": "\"int\"",
+    "java": {
+      "ValueType": "long",
+      "WrapValueType": "Long",
+      "Supplier": "Supplier<Long>",
+      "EmptyValue": "0",
+      "FunctionTypePrefix": "Long",
+      "EntryName": "Integer",
+      "SupplierGet" : "get"
+    }
+  },
+  {
+    "TypeName": "Float",
+    "TypeString": "\"float\"",
+    "java": {
+      "ValueType": "float",
+      "WrapValueType": "Float",
+      "EmptyValue": "0",
+      "Supplier": "Supplier<Float>",
+      "ConsumerFunctionPackage": "edu.wpi.first.util.function",
+      "SupplierFunctionPackage": "edu.wpi.first.util.function",
+      "FunctionTypePrefix": "Float",
+      "EntryName": "Float",
+      "SupplierGet" : "get"
+    }
+  },
+  {
+    "TypeName": "Double",
+    "TypeString": "\"double\"",
+    "java": {
+      "Supplier": "Supplier<Double>",
+      "WrapValueType": "Double",
+      "ValueType": "double",
+      "EmptyValue": "0",
+      "FunctionTypePrefix": "Double",
+      "EntryName": "Double",
+      "SupplierGet" : "get"
+    }
+  },
+  {
+    "TypeName": "String",
+    "TypeString": "\"string\"",
+
+    "java": {
+      "ValueType": "String",
+      "Supplier": "Supplier<String>",
+      "EmptyValue": "\"\"",
+      "FunctionTypeSuffix": "<String>",
+      "EntryName": "String",
+      "SupplierGet" : "get"
+    }
+  },
+  {
+    "TypeName": "Raw",
+    "java": {
+      "Supplier": "Supplier<byte[]>",
+      "WrapValueType": "Byte[]",
+      "ValueType": "byte[]",
+      "EmptyValue": "new byte[] {}",
+      "FunctionTypeSuffix": "<byte[]>",
+      "EntryName": "Raw",
+      "SupplierGet" : "get"
+    }
+  },
+  {
+    "TypeName": "BooleanArray",
+    "TypeString": "\"boolean[]\"",
+    "java": {
+      "Supplier": "Supplier<boolean[]>",
+      "ValueType": "boolean[]",
+      "WrapValueType": "Boolean[]",
+      "EmptyValue": "new boolean[] {}",
+      "FunctionTypeSuffix": "<boolean[]>",
+      "EntryName": "BooleanArray",
+      "SupplierGet" : "get"
+    }
+  },
+  {
+    "TypeName": "IntegerArray",
+    "TypeString": "\"int[]\"",
+    "java": {
+      "Supplier": "Supplier<int[]>",
+      "ValueType": "int[]",
+      "WrapValueType": "Integer[]",
+      "EmptyValue": "new int[] {}",
+      "FunctionTypeSuffix": "<int[]>",
+      "EntryName": "IntegerArray",
+      "SupplierGet" : "get"
+    }
+  },
+  {
+    "TypeName": "LongArray",
+    "TypeString": "\"long[]\"",
+    "java": {
+      "Supplier": "Supplier<long[]>",
+      "ValueType": "long[]",
+      "WrapValueType": "Long[]",
+      "EmptyValue": "new long[] {}",
+      "FunctionTypeSuffix": "<long[]>",
+      "EntryName": "IntegerArray",
+      "SupplierGet" : "get"
+    }
+  },
+  {
+    "TypeName": "FloatArray",
+    "TypeString": "\"float[]\"",
+    "java": {
+      "Supplier": "Supplier<float[]>",
+      "ValueType": "float[]",
+      "WrapValueType": "Float[]",
+      "EmptyValue": "new float[] {}",
+      "FunctionTypeSuffix": "<float[]>",
+      "EntryName": "FloatArray",
+      "SupplierGet" : "get"
+    }
+  },
+  {
+    "TypeName": "DoubleArray",
+    "TypeString": "\"double[]\"",
+    "java": {
+      "Supplier": "Supplier<double[]>",
+      "ValueType": "double[]",
+      "WrapValueType": "Double[]",
+      "EmptyValue": "new double[] {}",
+      "FunctionTypeSuffix": "<double[]>",
+      "EntryName": "DoubleArray",
+      "SupplierGet" : "get"
+    }
+  },
+  {
+    "TypeName": "StringArray",
+    "TypeString": "\"string[]\"",
+    "java": {
+      "Supplier": "Supplier<String[]>",
+      "ValueType": "String[]",
+      "EmptyValue": "new String[] {}",
+      "FunctionTypeSuffix": "<String[]>",
+      "EntryName": "StringArray",
+      "SupplierGet" : "get"
+    }
+  }
+]

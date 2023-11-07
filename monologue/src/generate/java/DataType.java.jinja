@@ -1,0 +1,132 @@
+package monologue;
+
+{%for t in geomTypes%}
+import edu.wpi.first.math.geometry.{{t.TypeName}};
+{%endfor%}
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.networktables.NTSendable;
+public  enum DataType {
+    {%for t in types%}
+    {{t.TypeName}},
+    {%endfor%}
+    {%for t in geomTypes%}
+    {{t.TypeName}},
+    {%endfor%}
+    Sendable,
+    NTSendable;
+
+
+    public static DataType fromClass(Class<?> clazz) throws IllegalArgumentException {
+        // if clazz has NTSendable interface
+        for (Class<?> cls : clazz.getInterfaces()) {
+            if (cls.equals(NTSendable.class)) {
+                return NTSendable;
+            }
+        }
+        // if clazz does not have NTSendable, but does have Sendable
+        for (Class<?> cls : clazz.getInterfaces()) {
+            if (cls.equals(Sendable.class)) {
+                return Sendable;
+            }
+        }
+        clazz = complexFromPrim(clazz);
+        {%for t in types%}
+        {%if t.java.WrapValueType is defined%}
+        if (clazz.equals({{t.java.WrapValueType}}.class)) {
+        {%else%}
+        if (clazz.equals({{t.java.ValueType}}.class)) {
+        {%endif%}
+            return {{t.TypeName}};
+        }
+        {%endfor%}
+        {%for t in geomTypes%}
+        if (clazz.equals({{t.TypeName}}.class)) {
+            return {{t.TypeName}};
+        } else
+        {%endfor%}
+        // if (clazz.equals(Float.class)) {
+        //     return FloatArray;
+        // } else if (clazz.equals(Boolean.class)) {
+        //     return Boolean;
+        // } else if (clazz.equals(String.class)) {
+        //     return String;
+        // } else if (clazz.equals(Integer.class)) {
+        //     return Integer;
+        // } else if (clazz.equals(Byte[].class)) {
+        //     return Raw;
+        // } else if (clazz.equals(Double[].class)) {
+        //     return DoubleArray;
+        // } else if (clazz.equals(Float[].class)) {
+        //     return FloatArray;
+        // } else if (clazz.equals(Boolean[].class)) {
+        //     return BooleanArray;
+        // } else if (clazz.equals(String[].class)) {
+        //     return StringArray;
+        // } else if (clazz.equals(Integer[].class)) {
+        //     return IntegerArray;
+        // } else if (clazz.equals(Translation2d.class)) {
+        //     return Translation2d;
+        
+        /* } else */ 
+        if (NTSendable.class.isAssignableFrom(clazz)) {
+            return NTSendable;
+        } else if (Sendable.class.isAssignableFrom(clazz)) {
+            return Sendable;
+        } else {
+            throw new IllegalArgumentException("Invalid datatype");
+        }
+    }
+
+    private static Class<?> complexFromPrim(Class<?> clazz) {
+        // if (clazz.equals(double.class)) {
+        //     return Double.class;
+        // } else if (clazz.equals(float.class)) {
+        //     return Float.class;
+        // } else if (clazz.equals(boolean.class)) {
+        //     return Boolean.class;
+        // } else if (clazz.equals(String.class)) {
+        //     return String.class;
+        // } else if (clazz.equals(int.class)) {
+        //     return Integer.class;
+        // } else if (clazz.equals(byte[].class)) {
+        //     return Byte[].class;
+        // } else if (clazz.equals(double[].class)) {
+        //     return Double[].class;
+        // } else if (clazz.equals(float[].class)) {
+        //     return Float[].class;
+        // } else if (clazz.equals(boolean[].class)) {
+        //     return Boolean[].class;
+        // } else if (clazz.equals(String[].class)) {
+        //     return String[].class;
+        // } else if (clazz.equals(int[].class)) {
+        //     return Integer[].class;
+        // } else if (clazz.equals(Translation2d.class)) {
+        //     return Translation2d.class;
+        // } else {
+        //     return clazz;
+        // }
+
+        {%for t in types%}
+        
+        if (clazz.equals({{t.java.ValueType}}.class)) {
+
+        {%if t.java.WrapValueType is defined%}
+            return {{t.java.WrapValueType}}.class;
+        {%else%}
+            return {{t.java.ValueType}}.class;
+        {%endif%}
+        } else
+        {%endfor%}
+        if (clazz.equals(int.class)) {
+            return Integer.class;
+        } else
+        {%for t in geomTypes%}
+        if (clazz.equals({{t.TypeName}}.class)) {
+            return {{t.TypeName}}.class;
+        } else
+        {%endfor%}
+        {
+            return clazz;
+        }
+    }
+}

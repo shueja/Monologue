@@ -1,0 +1,147 @@
+package monologue;
+
+{%for t in geomTypes%}
+import edu.wpi.first.math.geometry.{{t.TypeName}};
+{%endfor%}
+import edu.wpi.first.networktables.NTSendable;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.util.datalog.*;
+import edu.wpi.first.networktables.*;
+import edu.wpi.first.util.struct.Struct;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import java.util.function.*;
+import edu.wpi.first.util.function.FloatSupplier;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.function.Supplier;
+
+import edu.wpi.first.wpilibj.Timer;
+import monologue.util.GeomPacker;
+
+public abstract class GenericLogger {
+    public interface LogRunnable extends LongConsumer {
+        void close();
+    }
+    protected GenericLogger() {}
+
+    protected int logLevel;
+
+    protected LogRunnable field(LongConsumer run, Runnable close) {
+        return new LogRunnable() {
+            @Override
+            public void accept(long timestamp) {
+                run.accept(timestamp);
+            }
+            @Override
+            public void close() {
+                close.run();
+            }
+        };
+    }
+
+    protected LogRunnable field(LongConsumer run, Runnable close, int level) {
+        IntSupplier logLevelSupplier = this::getLevel;
+        return new LogRunnable() {
+            @Override
+            public void accept(long timestamp) {
+                if (logLevelSupplier.getAsInt() <= level) {
+                    run.accept(timestamp);
+                }
+            }
+            @Override
+            public void close() {
+                close.run();
+            }
+        };
+    }
+    protected final Map<String, LogRunnable> map = new HashMap<>();
+    protected final Collection<SendableBuilder> sendables = new LinkedHashSet<>();
+
+    {%for t in types%}
+    public void put(String entryName, {{t.java.ValueType}} value) {}
+
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, int level) {}
+
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
+        add{{t.TypeName}}(entryName, valueSupplier, 0);
+    }
+    {%endfor%}
+
+    {%for t in geomTypes%}
+    public void put(String entryName, {{t.TypeName}} value) {
+        putStruct(entryName, {{t.TypeName}}.struct, value);
+    }
+    public void add{{t.TypeName}}(String entryName, Supplier<{{t.TypeName}}> valueSupplier, int level) {
+        addStruct(entryName, {{t.TypeName}}.struct, valueSupplier, level);
+    }
+    public void add{{t.TypeName}}(String entryName, Supplier<{{t.TypeName}}> valueSupplier) {
+        add{{t.TypeName}}(entryName, valueSupplier, 0);
+    }
+    {%endfor%}
+
+    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<?extends R> valueSupplier, int level) {}
+    public <R> void putStruct(String entryName, Struct<R> struct, R value) {}
+
+    // public void put(String entryName, Translation2d value) {
+    //     var topic = table.getDoubleArrayTopic(entryName);
+    //     topic.setRetained(true);
+    //     var publisher = new Translation2dPublisher(topic);
+    //     publisher.set(value);
+    //     publisher.close();
+    // }
+
+    public void addNetworkTable(NetworkTable table) {};
+
+    public void addNetworkTable(NetworkTable table, String dlPath) {};
+
+    public void addSendable(String pathPrefix, String name, Sendable sendable) {
+        String prefix;
+        if (!pathPrefix.endsWith("/")) {
+            prefix = pathPrefix + "/" + name + "/";
+        } else {
+            prefix = pathPrefix + name + "/";
+        }
+        addSendable(prefix, sendable);
+    }
+
+    public void addSendable(String path, Sendable sendable) {};
+
+    public void addSendable(String pathPrefix, String name, NTSendable sendable) {
+        String prefix;
+        if (!pathPrefix.endsWith("/")) {
+            prefix = pathPrefix + "/" + name + "/";
+        } else {
+            prefix = pathPrefix + name + "/";
+        }
+        addSendable(prefix, sendable);
+    }
+
+    public void addSendable(String path, NTSendable sendable) {
+        addSendable(path, (Sendable) sendable);
+    };
+
+    public void setLevel(int level) {
+        logLevel = level;
+    }
+
+    public int getLevel() {
+        return logLevel;
+    }
+    public void update() {
+        long timestamp = (long) (Timer.getFPGATimestamp() * 1e6);
+        for (Map.Entry<String, LogRunnable> entry : map.entrySet()) {
+            var key = entry.getKey();
+            var val = entry.getValue();
+            val.accept(timestamp);
+        }
+        sendables.forEach(SendableBuilder::update);
+    }
+}

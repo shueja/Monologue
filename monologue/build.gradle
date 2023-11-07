@@ -1,0 +1,122 @@
+buildscript {
+    repositories {
+        maven {
+            url = 'https://frcmaven.wpi.edu/artifactory/ex-mvn'
+        }
+    }
+    dependencies {
+        classpath 'com.hubspot.jinjava:jinjava:2.7.1'
+    }
+}
+
+
+plugins {
+    id "maven-publish"
+    id "java-library"
+    id "edu.wpi.first.GradleRIO" version "2024.1.1-beta-3"
+    id 'com.diffplug.spotless' version '6.21.0' apply false
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            groupId = "com.github.shueja-personal"
+            artifactId = "Monologue"
+            version = "v1.0.0-alpha1"
+        }
+    }
+}
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+// Set to true to use debug for JNI.
+wpi.java.debugJni = false
+
+// Set this to true to enable desktop support.
+def includeDesktopSupport = true
+
+// Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
+// Also defines JUnit 5.
+
+dependencies {
+    api wpi.java.deps.wpilib()
+
+    nativeDebug wpi.java.deps.wpilibJniDebug(wpi.platforms.desktop)
+    nativeDebug wpi.java.vendor.jniDebug(wpi.platforms.desktop)
+    simulationDebug wpi.sim.enableDebug()
+
+    nativeRelease wpi.java.deps.wpilibJniRelease(wpi.platforms.desktop)
+    nativeRelease wpi.java.vendor.jniRelease(wpi.platforms.desktop)
+    simulationRelease wpi.sim.enableRelease()
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+}
+
+test {
+    useJUnitPlatform()
+    systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+}
+wpi.java.configureTestTasks(test)
+
+// Configure string concat to always inline compile
+tasks.withType(JavaCompile) {
+    options.compilerArgs.add '-XDstringConcat=inline'
+}
+
+import groovy.json.JsonSlurper;
+import com.hubspot.jinjava.Jinjava;
+import com.hubspot.jinjava.JinjavaConfig;
+
+def monologueTypesInputFile = file("src/generate/types.json")
+def geomTypesInputFile = file("src/generate/geomTypes.json")
+def monologueJavaTypesInputDir = file("src/generate/java")
+def monologueJavaTypesOutputDir = file("$buildDir/generated/main/java/monologue")
+
+task monologueGenerateClasses() {
+    description = "Generates Monologue Java classes"
+    group = "Monologue"
+
+    inputs.file monologueTypesInputFile
+    inputs.file geomTypesInputFile
+    inputs.dir monologueJavaTypesInputDir
+    outputs.dir monologueJavaTypesOutputDir
+
+    doLast {
+        def jsonSlurper = new JsonSlurper()
+        def jsonTypes = jsonSlurper.parse(monologueTypesInputFile)
+        def geomTypes = jsonSlurper.parse(geomTypesInputFile)
+
+        monologueJavaTypesOutputDir.deleteDir()
+        monologueJavaTypesOutputDir.mkdirs()
+
+        def config = new JinjavaConfig()
+        def jinjava = new Jinjava(config)
+
+        monologueJavaTypesInputDir.listFiles().each { File file ->
+            def template = file.text
+            def outfn = file.name.substring(0, file.name.length() - 6)
+            if (file.name.startsWith("NTLogger")
+                    || file.name.startsWith("DataLogger")
+                    || file.name.startsWith("GenericLogger")
+                    || file.name.startsWith("DataType")
+                    || file.name.startsWith("Logged")) {
+                def replacements = new HashMap<String,?>()
+                replacements.put("types", jsonTypes)
+                replacements.put("geomTypes", geomTypes)
+                def output = jinjava.render(template, replacements)
+                new File(monologueJavaTypesOutputDir, outfn).write(output)
+            }
+        }
+    }
+}
+
+sourceSets.main.java.srcDir "${buildDir}/generated/main/java"
+compileJava.dependsOn(monologueGenerateClasses)
+
+allprojects {
+    apply from: "$rootProject.projectDir/format.gradle"
+}

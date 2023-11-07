@@ -1,0 +1,26 @@
+{
+  "NTProvider": {
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/Robot/field": "Field2d",
+      "/Robot/mech": "Mechanism2d"
+    }
+  },
+  "NetworkTables": {
+    "retained": {
+      "Robot": {
+        "open": true
+      }
+    },
+    "transitory": {
+      "Robot": {
+        "Transform2d##v_/Robot/imperative": {
+          "Translation2d##v_translation": {
+            "open": true
+          }
+        },
+        "open": true
+      }
+    }
+  }
+}
