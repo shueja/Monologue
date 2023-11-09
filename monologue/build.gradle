@@ -21,7 +21,7 @@ publishing {
     publications {
         maven(MavenPublication) {
             from components.java
-            groupId = "com.github.shueja-personal"
+            groupId = "com.github.shueja"
             artifactId = "Monologue"
             version = "v1.0.0-alpha1"
         }
