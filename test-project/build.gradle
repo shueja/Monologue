@@ -72,7 +72,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
     
     implementation "com.github.Oblarg:Oblog:5.1.0"
-    implementation 'com.github.shueja-personal:Monologue:v0.0.4-alpha8'
+    implementation 'com.github.shueja-personal:Monologue:v1.0.0-alpha1'
 }
 
 repositories {

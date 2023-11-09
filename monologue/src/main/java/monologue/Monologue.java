@@ -48,7 +48,7 @@ public class Monologue {
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD, ElementType.METHOD})
-  public @interface BothLog {
+  public @interface LogBoth {
     public String path() default "";
 
     public boolean once() default false;
@@ -66,7 +66,7 @@ public class Monologue {
    */
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD, ElementType.METHOD})
-  public @interface DataLog {
+  public @interface LogFile {
     public boolean once() default false;
 
     public int level() default 0;
@@ -74,7 +74,7 @@ public class Monologue {
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD, ElementType.METHOD})
-  public @interface NTLog {
+  public @interface LogNT {
     public boolean once() default false;
 
     public int level() default 0;
@@ -104,6 +104,9 @@ public class Monologue {
     };
   }
 
+  public static void setupLogging(Logged loggable, String rootPath) {
+    Monologue.setupLogging(loggable, rootPath, true);
+  }
   public static void setupLogging(Logged loggable, String rootPath, boolean createDataLog) {
     System.out.println(rootPath);
     loggedRegistry.put(loggable, rootPath);
@@ -205,13 +208,13 @@ public class Monologue {
         DriverStation.reportWarning("Tried to log invalid type " + name + "(" + field.getType() + ") in " + ss_name, false);
         continue;
       }
-      if ((field.isAnnotationPresent(DataLog.class) || field.isAnnotationPresent(BothLog.class))
+      if ((field.isAnnotationPresent(LogFile.class) || field.isAnnotationPresent(LogBoth.class))
           && createDataLog) {
         dataLogger.startLog();
 
-        DataLog annotation = field.getAnnotation(DataLog.class);
+        LogFile annotation = field.getAnnotation(LogFile.class);
         if (annotation == null) {
-          BothLog logAnnotation = field.getAnnotation(BothLog.class);
+          LogBoth logAnnotation = field.getAnnotation(LogBoth.class);
           annotationPath = logAnnotation.path();
           oneShot = logAnnotation.once();
           level = logAnnotation.level();
@@ -228,11 +231,11 @@ public class Monologue {
           dataLogger.helper(getSupplier(field, loggable), type, key, oneShot, level);
         }
       }
-      if (field.isAnnotationPresent(NTLog.class) || field.isAnnotationPresent(BothLog.class)) {
+      if (field.isAnnotationPresent(LogNT.class) || field.isAnnotationPresent(LogBoth.class)) {
 
-        NTLog annotation = field.getAnnotation(NTLog.class);
+        LogNT annotation = field.getAnnotation(LogNT.class);
         if (annotation == null) {
-          BothLog logAnnotation = field.getAnnotation(BothLog.class);
+          LogBoth logAnnotation = field.getAnnotation(LogBoth.class);
           annotationPath = logAnnotation.path();
           oneShot = logAnnotation.once();
           level = logAnnotation.level();
@@ -251,16 +254,16 @@ public class Monologue {
     }
 
     for (Method method :getInheritedMethods(loggable.getClass())) {
-      if ((method.isAnnotationPresent(DataLog.class) || method.isAnnotationPresent(BothLog.class))
+      if ((method.isAnnotationPresent(LogFile.class) || method.isAnnotationPresent(LogBoth.class))
           && createDataLog) {
         dataLogger.startLog();
         method.setAccessible(true);
         String annotationPath = "";
         boolean oneShot;
         int level;
-        DataLog annotation = method.getAnnotation(DataLog.class);
+        LogFile annotation = method.getAnnotation(LogFile.class);
         if (annotation == null) {
-          BothLog logAnnotation = method.getAnnotation(BothLog.class);
+          LogBoth logAnnotation = method.getAnnotation(LogBoth.class);
           annotationPath = logAnnotation.path();
           oneShot = logAnnotation.once();
           level = logAnnotation.level();
@@ -273,18 +276,18 @@ public class Monologue {
         
         DataType type = DataType.fromClass(method.getReturnType());
         if (method.getParameterCount() > 0) {
-          throw new IllegalArgumentException("Cannot have parameters on a DataLog method");
+          throw new IllegalArgumentException("Cannot have parameters on a LogFile method");
         }
         dataLogger.helper(getSupplier(method, loggable), type, path, oneShot, level);
       }
-      if (method.isAnnotationPresent(NTLog.class) || method.isAnnotationPresent(BothLog.class)) {
+      if (method.isAnnotationPresent(LogNT.class) || method.isAnnotationPresent(LogBoth.class)) {
         method.setAccessible(true);
         String annotationPath = "";
         boolean oneShot;
         int level;
-        NTLog annotation = method.getAnnotation(NTLog.class);
+        LogNT annotation = method.getAnnotation(LogNT.class);
         if (annotation == null) {
-          BothLog logAnnotation = method.getAnnotation(BothLog.class);
+          LogBoth logAnnotation = method.getAnnotation(LogBoth.class);
           annotationPath = logAnnotation.path();
           oneShot = logAnnotation.once();
           level = logAnnotation.level();
@@ -295,7 +298,7 @@ public class Monologue {
         String key = annotationPath.equals("") ? ss_name + "/" + method.getName() : annotationPath;
         DataType type = DataType.fromClass(method.getReturnType());
         if (method.getParameterCount() > 0) {
-          throw new IllegalArgumentException("Cannot have parameters on a DataLog method");
+          throw new IllegalArgumentException("Cannot have parameters on a LogFile method");
         }
         ntLogger.helper(getSupplier(method, loggable), type, key, oneShot, level);
       }
@@ -311,7 +314,7 @@ public class Monologue {
     ntLogger.update();
   }
 
-  public static void updateDataLog() {
+  public static void updateFileLog() {
     dataLogger.update();
   }
 

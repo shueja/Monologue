@@ -5,9 +5,9 @@
 package frc.robot;
 
 import monologue.Monologue;
-import monologue.Monologue.BothLog;
-import monologue.Monologue.DataLog;
-import monologue.Monologue.NTLog;
+import monologue.Monologue.LogBoth;
+import monologue.Monologue.LogFile;
+import monologue.Monologue.LogNT;
 import monologue.Logged;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -30,7 +30,7 @@ import java.util.ArrayList;
  * project.
  */
 public class Robot extends TimedRobot implements Logged, Loggable {
-  @BothLog(once=true) private int samples = 0;
+  @LogBoth(once=true) private int samples = 0;
   boolean useOblog = false;
   boolean dataLog = false;
 
@@ -41,10 +41,10 @@ public class Robot extends TimedRobot implements Logged, Loggable {
 
   private Geometry m_geometry = new Geometry();
 
-  @NTLog @DataLog private Field2d field = new Field2d();
+  @LogNT @LogFile private Field2d field = new Field2d();
 
-  @BothLog private Mechanism2d mech = new Mechanism2d(1, 1);
-  @BothLog private long[] array = {0, 1, 2};
+  @LogBoth private Mechanism2d mech = new Mechanism2d(1, 1);
+  @LogBoth private long[] array = {0, 1, 2};
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -68,7 +68,7 @@ public class Robot extends TimedRobot implements Logged, Loggable {
     put("imperative", new Transform2d());
   }
 
-  @BothLog
+  @LogBoth
   public String getStringPath()
   {
     return getFullPath();
