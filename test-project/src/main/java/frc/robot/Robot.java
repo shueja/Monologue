@@ -79,12 +79,7 @@ public class Robot extends TimedRobot implements Logged, Loggable {
     if (useOblog) {
       Logger.updateEntries();
     } else {
-      if (true) {
-        Monologue.updateDataLog();
-        Monologue.updateNT();
-      } else {
-        Monologue.updateNT();
-      }
+      Monologue.update();
     }
     var timeAfter = Timer.getFPGATimestamp() * 1e6;
     samples++;
