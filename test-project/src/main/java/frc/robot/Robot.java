@@ -41,6 +41,8 @@ public class Robot extends TimedRobot implements Logged, Loggable {
 
   private Geometry m_geometry = new Geometry();
 
+  private SbTest m_sbTest = new SbTest();
+
   @LogNT @LogFile private Field2d field = new Field2d();
 
   @LogBoth private Mechanism2d mech = new Mechanism2d(1, 1);
@@ -63,7 +65,7 @@ public class Robot extends TimedRobot implements Logged, Loggable {
     if (useOblog) {
       Logger.configureLoggingAndConfig(this, false);
     } else {
-      Monologue.setupLogging(this, "/Robot", true);
+      Monologue.setupMonologue(this, "/Robot");
     }
     put("imperative", new Transform2d());
   }
@@ -79,7 +81,7 @@ public class Robot extends TimedRobot implements Logged, Loggable {
     if (useOblog) {
       Logger.updateEntries();
     } else {
-      Monologue.update();
+      Monologue.updateAll();
     }
     var timeAfter = Timer.getFPGATimestamp() * 1e6;
     samples++;
@@ -131,7 +133,6 @@ public class Robot extends TimedRobot implements Logged, Loggable {
 
   @Override
   public String getPath() {
-    // TODO Auto-generated method stub
     return "Robot";
   }
 }

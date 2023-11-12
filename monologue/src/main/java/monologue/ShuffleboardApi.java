@@ -1,6 +1,8 @@
 package monologue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -179,6 +181,13 @@ public class ShuffleboardApi {
     public Optional<ShuffleEntry> getEntry(String name);
 
     /**
+     * Gets all the entries in the container
+     * 
+     * @return the list of entries
+     */
+    public List<ShuffleEntry> getEntries();
+
+    /**
      * Adds a new boolean entry to the container that is updated by the supplier
      * 
      * @param name          the name of the entry
@@ -298,6 +307,11 @@ public class ShuffleboardApi {
       } else {
         return Optional.empty();
       }
+    }
+
+    @Override
+    public List<ShuffleEntry> getEntries() {
+      return new ArrayList<>(entries.values());
     }
 
     public String getName() {
@@ -442,6 +456,11 @@ public class ShuffleboardApi {
       } else {
         return Optional.empty();
       }
+    }
+
+    @Override
+    public List<ShuffleEntry> getEntries() {
+      return new ArrayList<>(entries.values());
     }
 
     public String getName() {

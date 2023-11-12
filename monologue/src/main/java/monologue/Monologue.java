@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.wpi.first.wpilibj.DataLogManager;
-
 public class Monologue {
 
   public static final NTLogger ntLogger = new NTLogger();
@@ -57,8 +55,8 @@ public class Monologue {
   }
 
   /**
-   * Annotate a field or method in a {@link Logged} subclass with this to log it
-   * to shuffleboard.
+   * Annotate a field or method in a {@link Logged} subclass and ({@link MonoShuffleboardTab} or {@link MonoShuffleboardLayout})
+   * with this to log it to shuffleboard.
    * 
    * <p>
    * Supported Types(primitive or not): Double, Boolean, String, Integer,
@@ -69,12 +67,12 @@ public class Monologue {
    * @param pos       [optional] the position of the widget on the shuffleboard
    * @param size      [optional] the size of the widget on the shuffleboard
    * @param widget    [optional] the widget type to use
-   * @param debugOnly [optional] whether or not to only post to shuffleboard in
-   *                  debug mode, defaults to <b>true<b>
+   * @param level     [optional] the log level to use
+   * 
    */
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ ElementType.FIELD, ElementType.METHOD })
-  public @interface Shuffleboard {
+  public @interface MonoShuffleboard {
     /** {Column, Row} | */
     public int[] pos() default {};
 
@@ -83,7 +81,25 @@ public class Monologue {
 
     public String widget() default "";
 
-    public boolean debugOnly() default true;
+    public LogLevel level() default LogLevel.RELEASE;
+  }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ ElementType.TYPE })
+  public @interface MonoShuffleboardTab {}
+
+  /**
+   * @param pos       [optional] the position of the widget on the shuffleboard
+   * @param size      [optional] the size of the widget on the shuffleboard
+   */
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ ElementType.TYPE })
+  public @interface MonoShuffleboardLayout {
+    /** {Column, Row} | */
+    public int[] pos() default {};
+
+    /** {Width, Height} | */
+    public int[] size() default {};
   }
 
   /**
@@ -98,24 +114,20 @@ public class Monologue {
    * @param rootPath the nt/datalog path to log to
    */
   public static void setupMonologue(Logged loggable, String rootPath) {
-    var lpath = LogPath.from(rootPath);
-    if (!lpath.isValid()) {
-      throw new IllegalArgumentException("Invalid path: " + rootPath);
-    } else if (lpath.isRoot()) {
-      throw new IllegalArgumentException("Root path of / is not allowed");
-    }
-    DataLogManager.logNetworkTables(true);
     logObj(loggable, rootPath);
   }
 
-
-
   /**
-   * Not to be called by user code
    * @param loggable the obj to scrape
    * @param path the path to log to
    */
   public static void logObj(Logged loggable, String path) {
+    var lpath = LogPath.from(path);
+    if (!lpath.isValid()) {
+      throw new IllegalArgumentException("Invalid path: " + path);
+    } else if (lpath.isRoot()) {
+      throw new IllegalArgumentException("Root path of / is not allowed");
+    }
     loggedRegistry.put(loggable, path);
     for (Field field : getAllFields(loggable.getClass())) {
       FieldEval.evalField(field, loggable, path);
@@ -128,14 +140,6 @@ public class Monologue {
 
   public static void updateAll() {
     ntLogger.update();
-    dataLogger.update();
-  }
-
-  public static void updateNT() {
-    ntLogger.update();
-  }
-
-  public static void updateFileLog() {
     dataLogger.update();
   }
 
