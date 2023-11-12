@@ -202,10 +202,15 @@ public class FieldEval {
     
     ShuffleboardApi.ShuffleEntryContainer container;
 
-    if (isLayout) {
+    if (isLayout && lpath.len() > 1) {
       var layout = ShuffleboardApi.getTab(lpath.get(lpath.len()-2)).getLayout(lpath.get(lpath.len()-1));
       MonoShuffleboardLayout layoutAnno = loggable.getClass().getAnnotation(MonoShuffleboardLayout.class);
-      layout.withSize(layoutAnno.size()[0], layoutAnno.size()[0]).withPosition(layoutAnno.pos()[0], layoutAnno.pos()[1]);
+      if (layoutAnno.size().length == 2) {
+        layout.withSize(layoutAnno.size()[0], layoutAnno.size()[1]);
+      }
+      if (layoutAnno.pos().length == 2) {
+        layout.withPosition(layoutAnno.pos()[0], layoutAnno.pos()[1]);
+      }
       container = layout;
     } else {
       container = ShuffleboardApi.getTab(lpath.get(lpath.len()-1));

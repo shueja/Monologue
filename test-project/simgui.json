@@ -20,6 +20,15 @@
           }
         },
         "open": true
+      },
+      "Shuffleboard": {
+        "Robot": {
+          "m_sbTest": {
+            "open": true
+          },
+          "open": true
+        },
+        "open": true
       }
     }
   }

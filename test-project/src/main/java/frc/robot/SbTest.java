@@ -3,9 +3,10 @@ package frc.robot;
 import monologue.Logged;
 import monologue.Monologue.LogNT;
 import monologue.Monologue.MonoShuffleboard;
+import monologue.Monologue.MonoShuffleboardLayout;
 import monologue.Monologue.MonoShuffleboardTab;
 
-@MonoShuffleboardTab
+@MonoShuffleboardLayout
 public class SbTest implements Logged {
 
     @MonoShuffleboard
@@ -18,5 +19,10 @@ public class SbTest implements Logged {
 
     public SbTest() {
 
+    }
+
+    @MonoShuffleboard(size = {2, 1})
+    public Boolean randTrue() {
+        return Math.random() > 0.5;
     }
 }

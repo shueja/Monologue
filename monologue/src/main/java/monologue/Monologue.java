@@ -141,6 +141,7 @@ public class Monologue {
   public static void updateAll() {
     ntLogger.update();
     dataLogger.update();
+    ShuffleboardApi.run();
   }
 
   private static List<Field> getAllFields(Class<?> type) {

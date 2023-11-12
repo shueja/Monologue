@@ -8,6 +8,9 @@ import monologue.Monologue;
 import monologue.Monologue.LogBoth;
 import monologue.Monologue.LogFile;
 import monologue.Monologue.LogNT;
+import monologue.Monologue.MonoShuffleboard;
+import monologue.Monologue.MonoShuffleboardLayout;
+import monologue.Monologue.MonoShuffleboardTab;
 import monologue.Logged;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -29,6 +32,7 @@ import java.util.ArrayList;
  * the package after creating this project, you must also update the build.gradle file in the
  * project.
  */
+@MonoShuffleboardTab
 public class Robot extends TimedRobot implements Logged, Loggable {
   @LogBoth(once=true) private int samples = 0;
   boolean useOblog = false;
@@ -37,6 +41,7 @@ public class Robot extends TimedRobot implements Logged, Loggable {
   ArrayList<Internal> m_internals = new ArrayList<>();
   private LinearFilter filter = LinearFilter.movingAverage(50);
   double totalOfAvgs = 0;
+  @MonoShuffleboard(pos = {3, 1})
   double avgsTaken = 0;
 
   private Geometry m_geometry = new Geometry();
