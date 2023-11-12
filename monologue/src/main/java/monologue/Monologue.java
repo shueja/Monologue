@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DataLogManager;
+
 public class Monologue {
 
   public static final NTLogger ntLogger = new NTLogger();
@@ -114,6 +117,7 @@ public class Monologue {
    * @param rootPath the nt/datalog path to log to
    */
   public static void setupMonologue(Logged loggable, String rootPath) {
+    NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), "", "");
     logObj(loggable, rootPath);
   }
 
