@@ -60,7 +60,8 @@ public class NTLogger extends GenericLogger {
         }
     }
 
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, int level) {
+    @Override
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
         var topic = table.get{{t.java.EntryName}}Topic(entryName);
         {%if t.TypeName == 'Raw'%}
         var publisher = topic.publish("raw");
@@ -75,23 +76,17 @@ public class NTLogger extends GenericLogger {
                     array[i] = (long) value[i];
                 }
                 publisher.set(array, timestamp);
-            }, publisher::close, level));
+            }, publisher::close));
             {%else%}
-            map.put(entryName, field((timestamp)->publisher.set(valueSupplier.get(), timestamp), publisher::close, level));
+            map.put(entryName, field((timestamp)->publisher.set(valueSupplier.get(), timestamp), publisher::close));
         {%endif%}
-        
-    }
-
-    @Override
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
-        add{{t.TypeName}}(entryName, valueSupplier, 0);
     }
     {%endfor%}
 
-    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier, int level) {
+    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier) {
         var topic = table.getStructTopic(entryName, struct);
         var publisher = topic.publish();
-        map.put(entryName, field((timestamp->publisher.set(valueSupplier.get(), timestamp)), publisher::close, level));
+        map.put(entryName, field((timestamp->publisher.set(valueSupplier.get(), timestamp)), publisher::close));
     }
 
     public <R> void putStruct(String entryName, Struct<R> struct, R value) {
@@ -136,14 +131,14 @@ public class NTLogger extends GenericLogger {
         sendables.add(builder);
     }
 
-    public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot, int level) {
+    public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot) {
         switch (type) {
             {%for t in types%}
             case {{t.TypeName}}:
                 if (oneShot) {
                     put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}());
                 } else {
-                    add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
+                    add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}());
                 }
                 break;
             {%endfor%}
@@ -155,7 +150,7 @@ public class NTLogger extends GenericLogger {
                 if (oneShot) {
                     put(path, ({{t.TypeName}}) supplier.get());
                 } else {
-                    add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get(), level);
+                    add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get());
                 }
                 break;
             {%endfor%}

@@ -21,24 +21,38 @@ import edu.wpi.first.wpilibj.DataLogManager;
 
 public class Monologue {
 
+  public static Boolean DEBUG = false;
   public static final NTLogger ntLogger = new NTLogger();
   public static final DataLogger dataLogger = new DataLogger();
   public static final Map<Logged, String> loggedRegistry = new HashMap<Logged, String>();
 
+  /**
+   * Logs the annotated field/method to WPILOG if inside a {@link Logged} class.
+   * 
+   * @param once  [optional] whether to log the field/method on update or not
+   * @param level [optional] the log level to use
+   */
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ ElementType.FIELD, ElementType.METHOD })
   public @interface LogFile {
     public boolean once() default false;
 
-    public LogLevel level() default LogLevel.RELEASE;
+    public LogLevel level() default LogLevel.COMP;
   }
 
+  /**
+   * Logs the annotated field/method to NetworkTables if inside a {@link Logged}
+   * class.
+   * 
+   * @param once  [optional] whether to log the field/method on update or not
+   * @param level [optional] the log level to use
+   */
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ ElementType.FIELD, ElementType.METHOD })
   public @interface LogNT {
     public boolean once() default false;
 
-    public LogLevel level() default LogLevel.RELEASE;
+    public LogLevel level() default LogLevel.COMP;
   }
 
   /**
@@ -46,31 +60,30 @@ public class Monologue {
    */
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ ElementType.FIELD, ElementType.METHOD })
-  // @Deprecated(since = "1.1.0", forRemoval = true)
+  @Deprecated(since = "1.1.0", forRemoval = true)
   public @interface LogBoth {
     /** Does nothing */
-    // @Deprecated(since = "1.1.0", forRemoval = true)
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public String path() default "";
 
     public boolean once() default false;
 
-    public LogLevel level() default LogLevel.RELEASE;
+    public LogLevel level() default LogLevel.COMP;
   }
 
   /**
-   * Annotate a field or method in a {@link Logged} subclass and ({@link MonoShuffleboardTab} or {@link MonoShuffleboardLayout})
+   * Annotate a field or method in a {@link Logged} subclass and
+   * ({@link MonoShuffleboardTab} or {@link MonoShuffleboardLayout})
    * with this to log it to shuffleboard.
    * 
    * <p>
-   * Supported Types(primitive or not): Double, Boolean, String, Integer,
-   * Double[], Boolean[], String[], Integer[], Sendable, Pose2d, Pose3d,
-   * Rotation2d,
-   * Rotation3d, Translation2d, Translation3d
+   * Supported Types: Double, Boolean, String, Integer,
+   * Double[], Boolean[], String[], Integer[]
    * 
-   * @param pos       [optional] the position of the widget on the shuffleboard
-   * @param size      [optional] the size of the widget on the shuffleboard
-   * @param widget    [optional] the widget type to use
-   * @param level     [optional] the log level to use
+   * @param pos    [optional] the position of the widget on the shuffleboard
+   * @param size   [optional] the size of the widget on the shuffleboard
+   * @param widget [optional] the widget type to use
+   * @param level  [optional] the log level to use
    * 
    */
   @Retention(RetentionPolicy.RUNTIME)
@@ -84,16 +97,21 @@ public class Monologue {
 
     public String widget() default "";
 
-    public LogLevel level() default LogLevel.RELEASE;
+    public LogLevel level() default LogLevel.COMP;
   }
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ ElementType.TYPE })
-  public @interface MonoShuffleboardTab {}
+  public @interface MonoShuffleboardTab {
+  }
 
   /**
-   * @param pos       [optional] the position of the widget on the shuffleboard
-   * @param size      [optional] the size of the widget on the shuffleboard
+   * Due to the path length limitations of shuffleboard, this annotation is used
+   * to define whether shuffleboard should attempt to place shuffleboard entries
+   * in a layout or not.
+   * 
+   * @param pos  [optional] the position of the widget on the shuffleboard
+   * @param size [optional] the size of the widget on the shuffleboard
    */
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ ElementType.TYPE })
@@ -116,14 +134,15 @@ public class Monologue {
    * @param loggable the root Logged object to log
    * @param rootPath the nt/datalog path to log to
    */
-  public static void setupMonologue(Logged loggable, String rootPath) {
+  public static void setupMonologue(Logged loggable, String rootPath, Boolean debug) {
+    DEBUG = debug;
     NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), "", "");
     logObj(loggable, rootPath);
   }
 
   /**
    * @param loggable the obj to scrape
-   * @param path the path to log to
+   * @param path     the path to log to
    */
   public static void logObj(Logged loggable, String path) {
     var lpath = LogPath.from(path);
@@ -132,16 +151,20 @@ public class Monologue {
     } else if (lpath.isRoot()) {
       throw new IllegalArgumentException("Root path of / is not allowed");
     }
+
     loggedRegistry.put(loggable, path);
+
     for (Field field : getAllFields(loggable.getClass())) {
       FieldEval.evalField(field, loggable, path);
     }
-
     for (Method method : getAllMethods(loggable.getClass())) {
       MethodEval.evalMethod(method, loggable, path);
     }
   }
 
+  /**
+   * Updates all the loggers, ideally called every cycle
+   */
   public static void updateAll() {
     ntLogger.update();
     dataLogger.update();

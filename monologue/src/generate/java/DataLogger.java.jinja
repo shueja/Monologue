@@ -38,7 +38,8 @@ public class DataLogger extends GenericLogger {
             {%endif%}
     }
 
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, int level) {
+    @Override
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
         var entry = new {{t.java.EntryName}}LogEntry(log, entryName);
             {%if t.TypeName == 'IntegerArray'%}
             map.put(entryName, field((timestamp)->{
@@ -48,14 +49,10 @@ public class DataLogger extends GenericLogger {
                     array[i] = (long) value[i];
                 }
                 entry.append(array, timestamp);
-            }, ()->{}, level));
+            }, ()->{}));
             {%else%}
-            map.put(entryName, field((timestamp)->entry.append(valueSupplier.get(), timestamp), ()->{}, level));
+            map.put(entryName, field((timestamp)->entry.append(valueSupplier.get(), timestamp), ()->{}));
         {%endif%}
-    }
-    @Override
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
-        add{{t.TypeName}}(entryName, valueSupplier, 0);
     }
     {%endfor%}
 
@@ -88,9 +85,9 @@ public class DataLogger extends GenericLogger {
         addNetworkTable(table, path);
     }
 
-    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier, int level) {
+    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier) {
         var entry = StructLogEntry.create(log, entryName, struct);
-        map.put(entryName, field((timestamp->entry.append(valueSupplier.get(), timestamp)), ()->{}, level));
+        map.put(entryName, field((timestamp->entry.append(valueSupplier.get(), timestamp)), ()->{}));
     }
 
     public <R> void putStruct(String entryName, Struct<R> struct, R value) {
@@ -101,7 +98,7 @@ public class DataLogger extends GenericLogger {
         log = DataLogManager.getLog();
     }
 
-    public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot, int level) {
+    public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot) {
         switch (type) {
             {%for t in types%}
                
@@ -109,7 +106,7 @@ public class DataLogger extends GenericLogger {
                 if (oneShot) {
                     put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}());
                 } else {
-                    add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
+                    add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}());
                 }
                 break;
             {%endfor%}
@@ -121,7 +118,7 @@ public class DataLogger extends GenericLogger {
                 if (oneShot) {
                     put(path, ({{t.TypeName}}) supplier.get());
                 } else {
-                    add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get(), level);
+                    add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get());
                 }
                 break;
             {%endfor%}

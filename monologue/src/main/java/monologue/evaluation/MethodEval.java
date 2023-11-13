@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import monologue.DataType;
+import monologue.LogLevel;
 import monologue.LogPath;
 import monologue.Logged;
 import monologue.Monologue;
@@ -48,8 +49,14 @@ public class MethodEval {
       DriverStation.reportWarning("Cannot have parameters on a logged method", false);
       return;
     }
-    
+
     LogMetadata logMetadata = AnnoEval.LogMetadata.from(method);
+
+    if (logMetadata.level == LogLevel.DEBUG && !Monologue.DEBUG) {
+      return;
+    } else if (logMetadata.level == LogLevel.FILE_IN_COMP && !Monologue.DEBUG) {
+      logType = LogType.File;
+    }
 
     String name = method.getName();
     String path = rootPath + "/" + name;
@@ -67,16 +74,14 @@ public class MethodEval {
           getSupplier(method, loggable),
           type,
           path,
-          logMetadata.once,
-          0
+          logMetadata.once
         );
     } else if (logType == LogType.Nt) {
       Monologue.ntLogger.helper(
           getSupplier(method, loggable),
           type,
           path,
-          logMetadata.once,
-          0
+          logMetadata.once
         );
     }
   }

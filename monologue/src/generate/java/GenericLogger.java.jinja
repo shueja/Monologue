@@ -32,8 +32,6 @@ public abstract class GenericLogger {
     }
     protected GenericLogger() {}
 
-    protected int logLevel;
-
     protected LogRunnable field(LongConsumer run, Runnable close) {
         return new LogRunnable() {
             @Override
@@ -47,47 +45,23 @@ public abstract class GenericLogger {
         };
     }
 
-    protected LogRunnable field(LongConsumer run, Runnable close, int level) {
-        IntSupplier logLevelSupplier = this::getLevel;
-        return new LogRunnable() {
-            @Override
-            public void accept(long timestamp) {
-                if (logLevelSupplier.getAsInt() <= level) {
-                    run.accept(timestamp);
-                }
-            }
-            @Override
-            public void close() {
-                close.run();
-            }
-        };
-    }
     protected final Map<String, LogRunnable> map = new HashMap<>();
     protected final Collection<SendableBuilder> sendables = new LinkedHashSet<>();
 
     {%for t in types%}
     public void put(String entryName, {{t.java.ValueType}} value) {}
 
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, int level) {}
-
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
-        add{{t.TypeName}}(entryName, valueSupplier, 0);
-    }
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {}
     {%endfor%}
 
     {%for t in geomTypes%}
     public void put(String entryName, {{t.TypeName}} value) {
         putStruct(entryName, {{t.TypeName}}.struct, value);
     }
-    public void add{{t.TypeName}}(String entryName, Supplier<{{t.TypeName}}> valueSupplier, int level) {
-        addStruct(entryName, {{t.TypeName}}.struct, valueSupplier, level);
-    }
-    public void add{{t.TypeName}}(String entryName, Supplier<{{t.TypeName}}> valueSupplier) {
-        add{{t.TypeName}}(entryName, valueSupplier, 0);
-    }
+    public void add{{t.TypeName}}(String entryName, Supplier<{{t.TypeName}}> valueSupplier) {}
     {%endfor%}
 
-    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<?extends R> valueSupplier, int level) {}
+    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<?extends R> valueSupplier) {}
     public <R> void putStruct(String entryName, Struct<R> struct, R value) {}
 
     // public void put(String entryName, Translation2d value) {
@@ -128,13 +102,6 @@ public abstract class GenericLogger {
         addSendable(path, (Sendable) sendable);
     };
 
-    public void setLevel(int level) {
-        logLevel = level;
-    }
-
-    public int getLevel() {
-        return logLevel;
-    }
     public void update() {
         long timestamp = (long) (Timer.getFPGATimestamp() * 1e6);
         for (Map.Entry<String, LogRunnable> entry : map.entrySet()) {

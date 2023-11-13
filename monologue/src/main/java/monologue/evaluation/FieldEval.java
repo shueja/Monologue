@@ -10,6 +10,7 @@ import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.DriverStation;
 import monologue.DataType;
+import monologue.LogLevel;
 import monologue.LogPath;
 import monologue.Logged;
 import monologue.Monologue;
@@ -134,6 +135,12 @@ public class FieldEval {
 
     LogMetadata logMetadata = AnnoEval.LogMetadata.from(field);
 
+    if (logMetadata.level == LogLevel.DEBUG && !Monologue.DEBUG) {
+      return false;
+    } else if (logMetadata.level == LogLevel.FILE_IN_COMP && !Monologue.DEBUG) {
+      logType = LogType.File;
+    }
+
     String name = field.getName();
     String key = rootPath + "/" + name;
     DataType type;
@@ -156,8 +163,7 @@ public class FieldEval {
             getSupplier(field, loggable),
             type,
             key,
-            logMetadata.once,
-            0 // TODO: Add level to LogFile
+            logMetadata.once
         );
       }
     } else if (logType == LogType.Nt) {
@@ -168,8 +174,7 @@ public class FieldEval {
             getSupplier(field, loggable),
             type,
             key,
-            logMetadata.once,
-            0);
+            logMetadata.once);
       }
     }
     return true;
