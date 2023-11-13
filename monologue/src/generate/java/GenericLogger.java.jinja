@@ -4,18 +4,10 @@ package monologue;
 import edu.wpi.first.math.geometry.{{t.TypeName}};
 {%endfor%}
 import edu.wpi.first.networktables.NTSendable;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.util.datalog.*;
-import edu.wpi.first.networktables.*;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import java.util.function.*;
-import edu.wpi.first.util.function.FloatSupplier;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,7 +16,6 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.Timer;
-import monologue.util.GeomPacker;
 
 public abstract class GenericLogger {
     public interface LogRunnable extends LongConsumer {
