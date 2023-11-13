@@ -18,8 +18,7 @@
           "Translation2d##v_translation": {
             "open": true
           }
-        },
-        "open": true
+        }
       },
       "Shuffleboard": {
         "Robot": {
@@ -27,8 +26,13 @@
             "open": true
           },
           "open": true
-        },
-        "open": true
+        }
+      },
+      "Tracer": {
+        "open": true,
+        "robotPeriodic": {
+          "open": true
+        }
       }
     }
   }

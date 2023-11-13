@@ -4,7 +4,6 @@ import monologue.Logged;
 import monologue.Monologue.LogNT;
 import monologue.Monologue.MonoShuffleboard;
 import monologue.Monologue.MonoShuffleboardLayout;
-import monologue.Monologue.MonoShuffleboardTab;
 
 @MonoShuffleboardLayout
 public class SbTest implements Logged {

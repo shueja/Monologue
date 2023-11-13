@@ -1,4 +1,4 @@
-package monologue;
+package monologue.util;
 
 import edu.wpi.first.networktables.NTSendableBuilder;
 import edu.wpi.first.networktables.NetworkTable;

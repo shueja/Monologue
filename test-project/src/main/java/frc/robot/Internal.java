@@ -1,6 +1,6 @@
 package frc.robot;
 
-import monologue.Monologue.LogBoth;
+import monologue.Monologue.LogNT;
 import monologue.Logged;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
@@ -40,7 +40,7 @@ public class Internal implements Logged, Loggable {
   }
 
   @Log
-  @LogBoth
+  @LogNT
   public double getNumber() {
     calls++;
     return calls + calls / 1000.0;

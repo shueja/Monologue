@@ -4,12 +4,11 @@
 
 package frc.robot;
 
+import monologue.Tracer;
 import monologue.Monologue;
-import monologue.Monologue.LogBoth;
 import monologue.Monologue.LogFile;
 import monologue.Monologue.LogNT;
 import monologue.Monologue.MonoShuffleboard;
-import monologue.Monologue.MonoShuffleboardLayout;
 import monologue.Monologue.MonoShuffleboardTab;
 import monologue.Logged;
 import edu.wpi.first.math.filter.LinearFilter;
@@ -24,6 +23,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.Logger;
+
 import java.util.ArrayList;
 
 /**
@@ -34,7 +34,7 @@ import java.util.ArrayList;
  */
 @MonoShuffleboardTab
 public class Robot extends TimedRobot implements Logged, Loggable {
-  @LogBoth(once=true) private int samples = 0;
+  @LogNT(once=true) private int samples = 0;
   boolean useOblog = false;
   boolean dataLog = false;
 
@@ -44,14 +44,16 @@ public class Robot extends TimedRobot implements Logged, Loggable {
   @MonoShuffleboard(pos = {3, 1})
   double avgsTaken = 0;
 
-  private Geometry m_geometry = new Geometry();
+  @SuppressWarnings("unused")
+  private Geometry geometry = new Geometry();
 
-  private SbTest m_sbTest = new SbTest();
+  @SuppressWarnings("unused")
+  private SbTest sbTest = new SbTest();
 
   @LogNT @LogFile private Field2d field = new Field2d();
 
-  @LogBoth private Mechanism2d mech = new Mechanism2d(1, 1);
-  @LogBoth private long[] array = {0, 1, 2};
+  @LogNT private Mechanism2d mech = new Mechanism2d(1, 1);
+  @LogNT private long[] array = {0, 1, 2};
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -70,23 +72,24 @@ public class Robot extends TimedRobot implements Logged, Loggable {
     if (useOblog) {
       Logger.configureLoggingAndConfig(this, false);
     } else {
-      Monologue.setupMonologue(this, "/Robot");
+      Monologue.setupMonologue(this, "/Robot", true);
     }
     put("imperative", new Transform2d());
   }
 
-  @LogBoth
+  @LogNT
   public String getStringPath()
   {
     return getFullPath();
   }
   @Override
   public void robotPeriodic() {
+    Tracer.startTrace("robotPeriodic");
     var timeBefore = Timer.getFPGATimestamp() * 1e6;
     if (useOblog) {
-      Logger.updateEntries();
+      Tracer.traceFunc("Oblarg Update", Logger::updateEntries);
     } else {
-      Monologue.updateAll();
+      Tracer.traceFunc("Monologue Update", Monologue::updateAll);
     }
     var timeAfter = Timer.getFPGATimestamp() * 1e6;
     samples++;
@@ -104,6 +107,7 @@ public class Robot extends TimedRobot implements Logged, Loggable {
     // m_internals.forEach(Internal::update);
     put("stringValue", samples + "");
     SmartDashboard.putBoolean(getPath(), dataLog);
+    Tracer.endTrace();
   }
 
   @Override
