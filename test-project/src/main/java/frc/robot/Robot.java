@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import monologue.MonoRobot;
 import monologue.Tracer;
 import monologue.Monologue;
 import monologue.Monologue.LogFile;
@@ -33,9 +34,8 @@ import java.util.ArrayList;
  * project.
  */
 @MonoShuffleboardTab
-public class Robot extends TimedRobot implements Logged, Loggable {
+public class Robot extends MonoRobot {
   @LogNT(once=true) private int samples = 0;
-  boolean useOblog = false;
   boolean dataLog = false;
 
   ArrayList<Internal> m_internals = new ArrayList<>();
@@ -61,20 +61,6 @@ public class Robot extends TimedRobot implements Logged, Loggable {
    */
   @Override
   public void robotInit() {
-    SmartDashboard.putBoolean("bool", true);
-    Monologue.dataLogger.addNetworkTable(
-        NetworkTableInstance.getDefault().getTable("SmartDashboard"));
-    // for (int i = 0; i < 100; i++) {
-    //   m_internals.add(new Internal(i + ""));
-    // }
-    // DataLogManager.start();
-    NetworkTableInstance.getDefault().getTopic("name").getGenericEntry();
-    if (useOblog) {
-      Logger.configureLoggingAndConfig(this, false);
-    } else {
-      Monologue.setupMonologue(this, "/Robot", true);
-    }
-    put("imperative", new Transform2d());
   }
 
   @LogNT
@@ -85,26 +71,8 @@ public class Robot extends TimedRobot implements Logged, Loggable {
   @Override
   public void robotPeriodic() {
     Tracer.startTrace("robotPeriodic");
-    var timeBefore = Timer.getFPGATimestamp() * 1e6;
-    if (useOblog) {
-      Tracer.traceFunc("Oblarg Update", Logger::updateEntries);
-    } else {
-      Tracer.traceFunc("Monologue Update", Monologue::updateAll);
-    }
-    var timeAfter = Timer.getFPGATimestamp() * 1e6;
-    samples++;
-    double avg = filter.calculate(timeAfter - timeBefore);
-    if (samples % 500 == 0 && samples < (500 * 8) + 50) {
-      System.out.println(avg);
-      totalOfAvgs += avg;
-      avgsTaken++;
-    }
-    if (samples == 500 * 8) {
-      System.out.println("Final Result: Oblog:" + useOblog + " DataLog:" + dataLog);
-      System.out.println(totalOfAvgs / avgsTaken);
-    }
+    Tracer.traceFunc("Monologue Update", Monologue::updateAll);
     field.getRobotObject().setPose(new Pose2d(samples / 100.0, 0, new Rotation2d()));
-    // m_internals.forEach(Internal::update);
     put("stringValue", samples + "");
     SmartDashboard.putBoolean(getPath(), dataLog);
     Tracer.endTrace();

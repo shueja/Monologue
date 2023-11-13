@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.function.Supplier;
 
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Timer;
 
@@ -13,7 +14,9 @@ public class Tracer {
     private static final HashMap<String, Double> traceTimes = new HashMap<>();
     private static final HashMap<String, Double> traceStartTimes = new HashMap<>();
     private static final NetworkTable rootTable = NetworkTableInstance.getDefault().getTable("Tracer");
+    private static final ArrayList<NetworkTableEntry> entryHeap = new ArrayList<>();
 
+    @SuppressWarnings("unused")
     private static String traceStack(String name) {
         StringBuilder sb = new StringBuilder();
         for (String s : trace) {
@@ -61,8 +64,14 @@ public class Tracer {
     }
 
     private static void endCycle() {
-        for (var entry : traceTimes.entrySet()) {
-            rootTable.getEntry(entry.getKey()).setDouble(entry.getValue());
+        for (var entry : entryHeap) {
+            entry.unpublish();
+        }
+        entryHeap.clear();
+        for (var trace : traceTimes.entrySet()) {
+            NetworkTableEntry entry = rootTable.getEntry(trace.getKey());
+            entry.setDouble(trace.getValue());
+            entryHeap.add(entry);
         }
         traceTimes.clear();
     }
