@@ -11,35 +11,22 @@ import monologue.Monologue.LogFile;
 import monologue.Monologue.LogNT;
 import monologue.Monologue.MonoShuffleboard;
 import monologue.Monologue.MonoShuffleboardTab;
-import monologue.Logged;
-import edu.wpi.first.math.filter.LinearFilter;
+import monologue.LogLevel;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.Logger;
 
 import java.util.ArrayList;
 
-/**
- * The VM is configured to automatically run this class, and to call the functions corresponding to
- * each mode, as described in the TimedRobot documentation. If you change the name of this class or
- * the package after creating this project, you must also update the build.gradle file in the
- * project.
- */
+
 @MonoShuffleboardTab
 public class Robot extends MonoRobot {
   @LogNT(once=true) private int samples = 0;
   boolean dataLog = false;
 
   ArrayList<Internal> m_internals = new ArrayList<>();
-  private LinearFilter filter = LinearFilter.movingAverage(50);
   double totalOfAvgs = 0;
   @MonoShuffleboard(pos = {3, 1})
   double avgsTaken = 0;
@@ -50,30 +37,20 @@ public class Robot extends MonoRobot {
   @SuppressWarnings("unused")
   private SbTest sbTest = new SbTest();
 
-  @LogNT @LogFile private Field2d field = new Field2d();
+  @LogNT private Field2d field = new Field2d();
 
   @LogNT private Mechanism2d mech = new Mechanism2d(1, 1);
-  @LogNT private long[] array = {0, 1, 2};
+  @LogFile private long[] array = {0, 1, 2};
 
-  /**
-   * This function is run when the robot is first started up and should be used for any
-   * initialization code.
-   */
   @Override
-  public void robotInit() {
-  }
+  public void robotInit() {}
 
-  @LogNT
-  public String getStringPath()
-  {
-    return getFullPath();
-  }
   @Override
   public void robotPeriodic() {
     Tracer.startTrace("robotPeriodic");
     Tracer.traceFunc("Monologue Update", Monologue::updateAll);
     field.getRobotObject().setPose(new Pose2d(samples / 100.0, 0, new Rotation2d()));
-    put("stringValue", samples + "");
+    log("stringValue", samples, LogLevel.FILE_IN_COMP);
     SmartDashboard.putBoolean(getPath(), dataLog);
     Tracer.endTrace();
   }
@@ -111,5 +88,10 @@ public class Robot extends MonoRobot {
   @Override
   public String getPath() {
     return "Robot";
+  }
+
+  @LogNT
+  public String getStringPath() {
+    return getFullPath();
   }
 }

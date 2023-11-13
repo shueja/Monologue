@@ -26,16 +26,21 @@ public class DataLogger extends GenericLogger {
     private DataLog log;
 
     {%for t in types%}
-    public void put(String entryName, {{t.java.ValueType}} value) {
+    @Override
+    public void put(String entryName, {{t.java.ValueType}} value, LogLevel level) {
+        if (level == LogLevel.DEBUG && !Monologue.DEBUG) {
+            return;
+        }
+
         {%if t.TypeName == 'IntegerArray'%}
             long[] array = new long[value.length];
             for (int i = 0; i < value.length; i++) {
                 array[i] = (long) value[i];
             }
             new {{t.java.EntryName}}LogEntry(log, entryName).append(array);
-            {%else%}
+        {%else%}
             new {{t.java.EntryName}}LogEntry(log, entryName).append(value);
-            {%endif%}
+        {%endif%}
     }
 
     @Override
@@ -56,16 +61,7 @@ public class DataLogger extends GenericLogger {
     }
     {%endfor%}
 
-    public void addNetworkTable(NetworkTable table) {
-        NetworkTableInstance.getDefault()
-            .startEntryDataLog(log, table.getPath(), table.getPath());
-    }
-
-    public void addNetworkTable(NetworkTable table, String dlPath) {
-        NetworkTableInstance.getDefault()
-            .startEntryDataLog(log, table.getPath(), dlPath);
-    }
-
+    @Override
     public void addSendable(String path, Sendable sendable) {    
         System.out.println("logging regular sendable at " + path);    
         var builder = new DataLogSendableBuilder(path);
@@ -73,6 +69,7 @@ public class DataLogger extends GenericLogger {
         sendables.add(builder);
     }
 
+    @Override
     public void addSendable(String path, NTSendable sendable) {
         System.out.println("logging ntsendable at " + path);
         var table = NetworkTableInstance.getDefault().getTable(path);
@@ -82,20 +79,22 @@ public class DataLogger extends GenericLogger {
         builder.startListeners();
         table.getEntry(".controllable").setBoolean(false);
         sendables.add(builder);
-        addNetworkTable(table, path);
+        NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), path, path);
     }
 
+    @Override
     public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier) {
         var entry = StructLogEntry.create(log, entryName, struct);
         map.put(entryName, field((timestamp->entry.append(valueSupplier.get(), timestamp)), ()->{}));
     }
 
-    public <R> void putStruct(String entryName, Struct<R> struct, R value) {
-        StructLogEntry.create(log, entryName, struct).append(value);
-    }
+    @Override
+    public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {
+        if (level == LogLevel.DEBUG && !Monologue.DEBUG) {
+            return;
+        }
 
-    public void startLog() {
-        log = DataLogManager.getLog();
+        StructLogEntry.create(log, entryName, struct).append(value);
     }
 
     public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot) {

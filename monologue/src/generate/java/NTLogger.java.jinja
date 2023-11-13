@@ -34,7 +34,15 @@ public class NTLogger extends GenericLogger {
     private final Map<String, Publisher> publishers = new HashMap<String, Publisher>();
 
     {%for t in types%}
-    public void put(String entryName, {{t.java.ValueType}} value) {
+    @Override
+    public void put(String entryName, {{t.java.ValueType}} value, LogLevel level) {
+        if (level == LogLevel.DEBUG && !Monologue.DEBUG) {
+            return;
+        } else if (level == LogLevel.FILE_IN_COMP && !Monologue.DEBUG) {
+            Monologue.dataLogger.put(entryName, value, level);
+            return;
+        }
+
         var genericPublisher = publishers.get(entryName);
         {{t.java.EntryName}}Publisher publisher = null;
         if (genericPublisher == null){
@@ -83,13 +91,23 @@ public class NTLogger extends GenericLogger {
     }
     {%endfor%}
 
+    @Override
     public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier) {
         var topic = table.getStructTopic(entryName, struct);
         var publisher = topic.publish();
         map.put(entryName, field((timestamp->publisher.set(valueSupplier.get(), timestamp)), publisher::close));
     }
 
-    public <R> void putStruct(String entryName, Struct<R> struct, R value) {
+    @Override
+    public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {
+        if (level == LogLevel.DEBUG && !Monologue.DEBUG) {
+            return;
+        } else if (level == LogLevel.FILE_IN_COMP && !Monologue.DEBUG) {
+            Monologue.dataLogger.putStruct(entryName, struct, value, level);
+            return;
+        }
+
+
         var genericPublisher = publishers.get(entryName);
         StructPublisher<R> publisher = null;
         if (genericPublisher == null){
@@ -104,24 +122,7 @@ public class NTLogger extends GenericLogger {
         }
     }
 
-    // public void put(String entryName, Translation2d value) {
-    //     var topic = table.getDoubleArrayTopic(entryName);
-    //     topic.setRetained(true);
-    //     var publisher = new Translation2dPublisher(topic);
-    //     publisher.set(value);
-    //     publisher.close();
-    // }
-
-    public void addNetworkTable(NetworkTable table) {
-        // NetworkTableInstance.getDefault()
-        //     .startEntryDataLog(table, table.getPath(), table.getPath());
-    }
-
-    public void addNetworkTable(NetworkTable table, String dlPath) {
-        // NetworkTableInstance.getDefault()
-        //     .startEntryDataLog(table, table.getPath(), dlPath);
-    }
-
+    @Override
     public void addSendable(String path, Sendable sendable) {        
         var builder = new SendableBuilderImpl();
         builder.setTable(table.getTable(path));
