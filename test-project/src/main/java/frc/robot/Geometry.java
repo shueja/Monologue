@@ -4,7 +4,7 @@
 
 package frc.robot;
 
-import monologue.Monologue.LogNT;
+import monologue.Annotations.LogNT;
 import monologue.Logged;
 import edu.wpi.first.math.geometry.*;
 

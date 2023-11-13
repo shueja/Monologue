@@ -7,10 +7,8 @@ package frc.robot;
 import monologue.MonoRobot;
 import monologue.Tracer;
 import monologue.Monologue;
-import monologue.Monologue.LogFile;
-import monologue.Monologue.LogNT;
-import monologue.Monologue.MonoShuffleboard;
-import monologue.Monologue.MonoShuffleboardTab;
+import monologue.Annotations.LogFile;
+import monologue.Annotations.LogNT;
 import monologue.LogLevel;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -21,21 +19,16 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import java.util.ArrayList;
 
 
-@MonoShuffleboardTab
 public class Robot extends MonoRobot {
   @LogNT(once=true) private int samples = 0;
   boolean dataLog = false;
 
   ArrayList<Internal> m_internals = new ArrayList<>();
   double totalOfAvgs = 0;
-  @MonoShuffleboard(pos = {3, 1})
   double avgsTaken = 0;
 
   @SuppressWarnings("unused")
   private Geometry geometry = new Geometry();
-
-  @SuppressWarnings("unused")
-  private SbTest sbTest = new SbTest();
 
   @LogNT private Field2d field = new Field2d();
 

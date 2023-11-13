@@ -1,12 +1,5 @@
 package monologue;
 
-import monologue.evaluation.FieldEval;
-import monologue.evaluation.MethodEval;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -18,110 +11,19 @@ import java.util.Set;
 
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
+import monologue.evaluation.FieldEval;
+import monologue.evaluation.MethodEval;
 
 public class Monologue {
 
+  /**
+   * The Monologue library wide debug flag,
+   * is used to filter logging behavior
+   */
   public static Boolean DEBUG = false;
   public static final NTLogger ntLogger = new NTLogger();
   public static final DataLogger dataLogger = new DataLogger();
   public static final Map<Logged, String> loggedRegistry = new HashMap<Logged, String>();
-
-  /**
-   * Logs the annotated field/method to WPILOG if inside a {@link Logged} class.
-   * 
-   * @param once  [optional] whether to log the field/method on update or not
-   * @param level [optional] the log level to use
-   */
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target({ ElementType.FIELD, ElementType.METHOD })
-  public @interface LogFile {
-    public boolean once() default false;
-
-    public LogLevel level() default LogLevel.COMP;
-  }
-
-  /**
-   * Logs the annotated field/method to NetworkTables if inside a {@link Logged}
-   * class.
-   * 
-   * @param once  [optional] whether to log the field/method on update or not
-   * @param level [optional] the log level to use
-   */
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target({ ElementType.FIELD, ElementType.METHOD })
-  public @interface LogNT {
-    public boolean once() default false;
-
-    public LogLevel level() default LogLevel.COMP;
-  }
-
-  /**
-   * Is just an alias for {@link LogNT} now until removed
-   */
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target({ ElementType.FIELD, ElementType.METHOD })
-  @Deprecated(since = "1.1.0", forRemoval = true)
-  public @interface LogBoth {
-    /** Does nothing */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    public String path() default "";
-
-    public boolean once() default false;
-
-    public LogLevel level() default LogLevel.COMP;
-  }
-
-  /**
-   * Annotate a field or method in a {@link Logged} subclass and
-   * ({@link MonoShuffleboardTab} or {@link MonoShuffleboardLayout})
-   * with this to log it to shuffleboard.
-   * 
-   * <p>
-   * Supported Types: Double, Boolean, String, Integer,
-   * Double[], Boolean[], String[], Integer[]
-   * 
-   * @param pos    [optional] the position of the widget on the shuffleboard
-   * @param size   [optional] the size of the widget on the shuffleboard
-   * @param widget [optional] the widget type to use
-   * @param level  [optional] the log level to use
-   * 
-   */
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target({ ElementType.FIELD, ElementType.METHOD })
-  public @interface MonoShuffleboard {
-    /** {Column, Row} | */
-    public int[] pos() default {};
-
-    /** {Width, Height} | */
-    public int[] size() default {};
-
-    public String widget() default "";
-
-    public LogLevel level() default LogLevel.COMP;
-  }
-
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target({ ElementType.TYPE })
-  public @interface MonoShuffleboardTab {
-  }
-
-  /**
-   * Due to the path length limitations of shuffleboard, this annotation is used
-   * to define whether shuffleboard should attempt to place shuffleboard entries
-   * in a layout or not.
-   * 
-   * @param pos  [optional] the position of the widget on the shuffleboard
-   * @param size [optional] the size of the widget on the shuffleboard
-   */
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target({ ElementType.TYPE })
-  public @interface MonoShuffleboardLayout {
-    /** {Column, Row} | */
-    public int[] pos() default {};
-
-    /** {Width, Height} | */
-    public int[] size() default {};
-  }
 
   /**
    * Is the main entry point for the monologue library.
@@ -168,7 +70,6 @@ public class Monologue {
   public static void updateAll() {
     ntLogger.update();
     dataLogger.update();
-    ShuffleboardApi.run();
   }
 
   private static List<Field> getAllFields(Class<?> type) {

@@ -1,6 +1,6 @@
 package frc.robot;
 
-import monologue.Monologue.LogNT;
+import monologue.Annotations.LogNT;
 import monologue.Logged;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;

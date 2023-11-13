@@ -3,10 +3,9 @@ package monologue.evaluation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import monologue.Monologue.LogBoth;
-import monologue.Monologue.LogFile;
+import monologue.Annotations.LogFile;
 import monologue.LogLevel;
-import monologue.Monologue.LogNT;
+import monologue.Annotations.LogNT;
 
 public class AnnoEval {
     
@@ -16,8 +15,6 @@ public class AnnoEval {
 
     public static LogType annoEval(Method method) {
         if (method.isAnnotationPresent(LogNT.class)) {
-            return LogType.Nt;
-        } else if (method.isAnnotationPresent(LogBoth.class)) {
             return LogType.Nt;
         } else if (method.isAnnotationPresent(LogFile.class)) {
             return LogType.File;
@@ -29,8 +26,6 @@ public class AnnoEval {
     public static LogType annoEval(Field field) {
         if (field.isAnnotationPresent(LogNT.class)) {
             return LogType.Nt;
-        } else if (field.isAnnotationPresent(LogBoth.class)) {
-            return LogType.Nt;
         } else if (field.isAnnotationPresent(LogFile.class)) {
             return LogType.File;
         } else {
@@ -41,22 +36,21 @@ public class AnnoEval {
     public static class LogMetadata {
         public final LogLevel level;
         public final boolean once;
+        public final String relativePath;
 
-        public LogMetadata(LogLevel level, boolean once) {
+        public LogMetadata(LogLevel level, boolean once, String path) {
             this.level = level;
             this.once = once;
+            this.relativePath = path;
         }
 
         public static LogMetadata from(Method method) {
             if (method.isAnnotationPresent(LogFile.class)) {
                 LogFile anno = method.getAnnotation(LogFile.class);
-                return new LogMetadata(anno.level(), anno.once());
-            } else if (method.isAnnotationPresent(LogBoth.class)) {
-                LogBoth anno = method.getAnnotation(LogBoth.class);
-                return new LogMetadata(anno.level(), anno.once());
+                return new LogMetadata(anno.level(), anno.once(), anno.path());
             } else if (method.isAnnotationPresent(LogNT.class)) {
                 LogNT anno = method.getAnnotation(LogNT.class);
-                return new LogMetadata(anno.level(), anno.once());
+                return new LogMetadata(anno.level(), anno.once(), anno.path());
             } else {
                 return null;
             }
@@ -65,13 +59,10 @@ public class AnnoEval {
         public static LogMetadata from(Field field) {
             if (field.isAnnotationPresent(LogFile.class)) {
                 LogFile anno = field.getAnnotation(LogFile.class);
-                return new LogMetadata(anno.level(), anno.once());
-            } else if (field.isAnnotationPresent(LogBoth.class)) {
-                LogBoth anno = field.getAnnotation(LogBoth.class);
-                return new LogMetadata(anno.level(), anno.once());
+                return new LogMetadata(anno.level(), anno.once(), anno.path());
             } else if (field.isAnnotationPresent(LogNT.class)) {
                 LogNT anno = field.getAnnotation(LogNT.class);
-                return new LogMetadata(anno.level(), anno.once());
+                return new LogMetadata(anno.level(), anno.once(), anno.path());
             } else {
                 return null;
             }
