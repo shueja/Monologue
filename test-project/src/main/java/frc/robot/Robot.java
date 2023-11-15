@@ -48,7 +48,6 @@ public class Robot extends MonoRobot {
   @Override
   public void robotInit() {
     debugEntry.set(true);
-    
   }
 
   @Override
