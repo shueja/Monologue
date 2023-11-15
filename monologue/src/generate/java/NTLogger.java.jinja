@@ -19,95 +19,137 @@ public class NTLogger extends GenericLogger {
 
     private final NetworkTableInstance table = NetworkTableInstance.getDefault();
 
-    private final Map<String, Publisher> publishers = new HashMap<String, Publisher>();
+    private final Map<String, Integer> published = new HashMap<>();
+    private final Map<String, Topic> topics = new HashMap<>();
+    private final Map<String, StructEntry<?>> structEntrys = new HashMap<>();
 
     {%for t in types%}
     @Override
     public void put(String entryName, {{t.java.ValueType}} value, LogLevel level) {
-        if (level == LogLevel.DEBUG && !Monologue.DEBUG) {
+        if (level == LogLevel.DEBUG && !Monologue.isDebug()) {
+            if (published.containsKey(entryName) && topics.containsKey(entryName)) {
+                NetworkTablesJNI.unpublish(
+                    published.remove(entryName)
+                );
+            }
             return;
-        } else if (level == LogLevel.FILE_IN_COMP && !Monologue.DEBUG) {
+        } else if (level == LogLevel.FILE_IN_COMP && !Monologue.isDebug()) {
             Monologue.dataLogger.put(entryName, value, level);
+            if (published.containsKey(entryName) && topics.containsKey(entryName)) {
+                NetworkTablesJNI.unpublish(
+                    published.remove(entryName)
+                );
+            }
             return;
         }
 
-        var genericPublisher = publishers.get(entryName);
-        {{t.java.EntryName}}Publisher publisher = null;
-        if (genericPublisher == null){
+        if (!topics.containsKey(entryName)) {
             var topic = table.get{{t.java.EntryName}}Topic(entryName);
             {%if t.TypeName == 'Raw'%}
-            publisher = topic.publish("raw");
+            var publisher = topic.publish("raw");
             {%else%}
-            publisher = topic.publish();{%endif%}
-            publishers.put(entryName, publisher);
-        } else if (genericPublisher instanceof {{t.java.EntryName}}Publisher) {
-            publisher = ({{t.java.EntryName}}Publisher) genericPublisher;
+            var publisher = topic.publish();
+            {%endif%}
+            
+            published.put(entryName, publisher.getHandle());
+            topics.put(entryName, topic);
         }
-        if (publisher != null) {
-            {%if t.TypeName == 'IntegerArray'%}
-            long[] array = new long[value.length];
-            for (int i = 0; i < value.length; i++) {
-                array[i] = (long) value[i];
-            }
-            publisher.set(array);
+
+        if (!published.containsKey(entryName)) {
+            {%if t.TypeName == 'Raw'%}
+            published.put(entryName, (({{t.java.EntryName}}Topic) topics.get(entryName)).publish("raw").getHandle());
             {%else%}
-            publisher.set(value);
+            published.put(entryName, (({{t.java.EntryName}}Topic) topics.get(entryName)).publish().getHandle());
             {%endif%}
         }
+        {%if t.TypeName == 'IntegerArray'%}
+        NetworkTablesJNI.set{{t.java.EntryName}}(published.get(entryName), 0, toLongArray(value));
+        {%else%}
+        NetworkTablesJNI.set{{t.java.EntryName}}(published.get(entryName), 0, value);
+        {%endif%}
     }
 
     @Override
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, LogLevel level) {
         var topic = table.get{{t.java.EntryName}}Topic(entryName);
         {%if t.TypeName == 'Raw'%}
-        var publisher = topic.publish("raw");
+        var entry = topic.getEntry("raw", {{t.java.EmptyValue}});
+        {%elif t.TypeName == 'IntegerArray'%}
+        var entry = topic.getEntry(new long[] {});
         {%else%}
-        var publisher = topic.publish();
+        var entry = topic.getEntry({{t.java.EmptyValue}});
         {%endif%}
-            {%if t.TypeName == 'IntegerArray'%}
-            map.put(entryName, field((timestamp)->{
-                int[] value = valueSupplier.get();
-                long[] array = new long[value.length];
-                for (int i = 0; i < value.length; i++) {
-                    array[i] = (long) value[i];
-                }
-                publisher.set(array, timestamp);
-            }, publisher::close));
-            {%else%}
-            map.put(entryName, field((timestamp)->publisher.set(valueSupplier.get(), timestamp), publisher::close));
+        {%if t.TypeName == 'IntegerArray'%}
+            addField(
+                entryName,
+                level,
+                (timestamp) -> entry.set(
+                    toLongArray(valueSupplier.get()),
+                    timestamp
+                ),
+                () -> entry.set(toLongArray(valueSupplier.get())),
+                entry::unpublish
+            );
+        {%else%}
+            addField(
+                entryName,
+                level,
+                (timestamp) -> entry.set(valueSupplier.get(), timestamp),
+                () -> entry.set(valueSupplier.get()),
+                entry::unpublish
+            );
         {%endif%}
     }
     {%endfor%}
 
     @Override
-    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier) {
+    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier, LogLevel level) {
         var topic = table.getStructTopic(entryName, struct);
         var publisher = topic.publish();
-        map.put(entryName, field((timestamp->publisher.set(valueSupplier.get(), timestamp)), publisher::close));
+        addField(
+            entryName,
+            level,
+            timestamp->publisher.set(valueSupplier.get(), timestamp),
+            ()->publisher.set(valueSupplier.get()),
+            ()->NetworkTablesJNI.unpublish(publisher.getHandle())
+        );
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {
-        if (level == LogLevel.DEBUG && !Monologue.DEBUG) {
+        if (level == LogLevel.DEBUG && !Monologue.isDebug()) {
+            if (published.containsKey(entryName) && topics.containsKey(entryName) && structEntrys.containsKey(entryName)) {
+                ((StructEntry<R>) structEntrys.remove(entryName)).unpublish();
+                NetworkTablesJNI.unpublish(published.remove(entryName));
+            }
             return;
-        } else if (level == LogLevel.FILE_IN_COMP && !Monologue.DEBUG) {
-            Monologue.dataLogger.putStruct(entryName, struct, value, level);
+        } else if (level == LogLevel.FILE_IN_COMP && !Monologue.isDebug()) {
+            Monologue.dataLogger.putStruct(entryName, struct, value);
+            if (published.containsKey(entryName) && topics.containsKey(entryName) && structEntrys.containsKey(entryName)) {
+                ((StructEntry<R>) structEntrys.remove(entryName)).unpublish();
+                NetworkTablesJNI.unpublish(published.remove(entryName));
+            }
             return;
         }
 
-
-        var genericPublisher = publishers.get(entryName);
-        StructPublisher<R> publisher = null;
-        if (genericPublisher == null){
+        if (!topics.containsKey(entryName)) {
             var topic = table.getStructTopic(entryName, struct);
-            publisher = topic.publish();
-            publishers.put(entryName, publisher);
-        } else if (genericPublisher instanceof StructPublisher<?>) {
-            publisher = (StructPublisher<R>) genericPublisher;
+            var publisher = topic.publish();
+            published.put(entryName, publisher.getHandle());
+            topics.put(entryName, topic);
         }
-        if (publisher != null) {
-            publisher.set(value);
+
+        if (!published.containsKey(entryName)) {
+            published.put(entryName, ((StructTopic<R>) topics.get(entryName)).publish().getHandle());
+        }
+
+        if (!structEntrys.containsKey(entryName)) {
+            var entry = ((StructTopic<R>) topics.get(entryName)).getEntry(null);
+            entry.set(value);
+            structEntrys.put(entryName, entry);
+        } else {
+            ((StructEntry<R>) structEntrys.get(entryName)).set(value);
         }
     }
 
@@ -121,14 +163,14 @@ public class NTLogger extends GenericLogger {
         sendables.add(builder);
     }
 
-    public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot) {
+    public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot, LogLevel level) {
         switch (type) {
             {%for t in types%}
             case {{t.TypeName}}:
                 if (oneShot) {
-                    put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}());
+                    put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
                 } else {
-                    add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}());
+                    add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
                 }
                 break;
             {%endfor%}
@@ -138,14 +180,19 @@ public class NTLogger extends GenericLogger {
             {%for t in geomTypes%}
             case {{t.TypeName}}:
                 if (oneShot) {
-                    put(path, ({{t.TypeName}}) supplier.get());
+                    put(path, ({{t.TypeName}}) supplier.get(), level);
                 } else {
-                    add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get());
+                    add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get(), level);
                 }
                 break;
             {%endfor%}
             default:
                 throw new IllegalArgumentException("Invalid data type");
         }
+    }
+
+    @Override
+    public Boolean isNT() {
+        return true;
     }
 }

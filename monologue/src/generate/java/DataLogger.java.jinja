@@ -24,35 +24,33 @@ public class DataLogger extends GenericLogger {
     {%for t in types%}
     @Override
     public void put(String entryName, {{t.java.ValueType}} value, LogLevel level) {
-        if (level == LogLevel.DEBUG && !Monologue.DEBUG) {
+        if (level == LogLevel.DEBUG && !Monologue.isDebug()) {
             return;
         }
 
         {%if t.TypeName == 'IntegerArray'%}
-            long[] array = new long[value.length];
-            for (int i = 0; i < value.length; i++) {
-                array[i] = (long) value[i];
-            }
-            new {{t.java.EntryName}}LogEntry(log, entryName).append(array);
+            new {{t.java.EntryName}}LogEntry(log, entryName)
+                .append(toLongArray(value));
         {%else%}
             new {{t.java.EntryName}}LogEntry(log, entryName).append(value);
         {%endif%}
     }
 
     @Override
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, LogLevel level) {
         var entry = new {{t.java.EntryName}}LogEntry(log, entryName);
-            {%if t.TypeName == 'IntegerArray'%}
-            map.put(entryName, field((timestamp)->{
-                int[] value = valueSupplier.get();
-                long[] array = new long[value.length];
-                for (int i = 0; i < value.length; i++) {
-                    array[i] = (long) value[i];
-                }
-                entry.append(array, timestamp);
-            }, ()->{}));
-            {%else%}
-            map.put(entryName, field((timestamp)->entry.append(valueSupplier.get(), timestamp), ()->{}));
+        {%if t.TypeName == 'IntegerArray'%}
+            addField(
+                entryName,
+                level,
+                timestamp->entry.append(toLongArray(valueSupplier.get()), timestamp)
+            );
+        {%else%}
+            addField(
+                entryName,
+                level,
+                timestamp->entry.append(valueSupplier.get(), timestamp)
+            );
         {%endif%}
     }
     {%endfor%}
@@ -79,46 +77,58 @@ public class DataLogger extends GenericLogger {
     }
 
     @Override
-    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier) {
+    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier, LogLevel level) {
         var entry = StructLogEntry.create(log, entryName, struct);
-        map.put(entryName, field((timestamp->entry.append(valueSupplier.get(), timestamp)), ()->{}));
+        addField(
+            entryName,
+            level,
+            timestamp->entry.append(valueSupplier.get(), timestamp)
+        );
     }
 
     @Override
     public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {
-        if (level == LogLevel.DEBUG && !Monologue.DEBUG) {
+        if (level == LogLevel.DEBUG && !Monologue.isDebug()) {
             return;
         }
 
         StructLogEntry.create(log, entryName, struct).append(value);
     }
 
-    public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot) {
+    public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot, LogLevel level) {
         switch (type) {
             {%for t in types%}
                
             case {{t.TypeName}}:
                 if (oneShot) {
-                    put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}());
+                    put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
                 } else {
-                    add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}());
+                    add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
                 }
                 break;
             {%endfor%}
             case Sendable:
                 addSendable(path, (Sendable) supplier.get());
                 break;
+            case NTSendable:
+                addSendable(path, (Sendable) supplier.get());
+                break;
             {%for t in geomTypes%}
             case {{t.TypeName}}:
                 if (oneShot) {
-                    put(path, ({{t.TypeName}}) supplier.get());
+                    put(path, ({{t.TypeName}}) supplier.get(), level);
                 } else {
-                    add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get());
+                    add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get(), level);
                 }
                 break;
             {%endfor%}
             default:
                 throw new IllegalArgumentException("Invalid data type");
         }
+    }
+
+    @Override
+    public Boolean isNT() {
+        return false;
     }
 }

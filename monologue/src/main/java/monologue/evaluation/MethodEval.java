@@ -6,7 +6,6 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import monologue.DataType;
-import monologue.LogLevel;
 import monologue.Logged;
 import monologue.Monologue;
 import monologue.evaluation.AnnoEval.LogMetadata;
@@ -29,7 +28,7 @@ public class MethodEval {
     evalMethodAnnotations(method, loggable, rootPath);
   }
 
-  public static void evalMethodAnnotations(Method method, Logged loggable, String rootPath) {
+  private static void evalMethodAnnotations(Method method, Logged loggable, String rootPath) {
 
     LogType logType = AnnoEval.annoEval(method);
 
@@ -42,12 +41,6 @@ public class MethodEval {
     }
 
     LogMetadata logMetadata = AnnoEval.LogMetadata.from(method);
-
-    if (logMetadata.level == LogLevel.DEBUG && !Monologue.DEBUG) {
-      return;
-    } else if (logMetadata.level == LogLevel.FILE_IN_COMP && !Monologue.DEBUG) {
-      logType = LogType.File;
-    }
 
     String name = logMetadata.relativePath.isEmpty() ? method.getName() : logMetadata.relativePath;
     String path = rootPath + "/" + name;
@@ -65,14 +58,16 @@ public class MethodEval {
           getSupplier(method, loggable),
           type,
           path,
-          logMetadata.once
+          logMetadata.once,
+          logMetadata.level
         );
     } else if (logType == LogType.Nt) {
       Monologue.ntLogger.helper(
           getSupplier(method, loggable),
           type,
           path,
-          logMetadata.once
+          logMetadata.once,
+          logMetadata.level
         );
     }
   }

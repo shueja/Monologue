@@ -20,7 +20,8 @@ public class Monologue {
    * The Monologue library wide debug flag,
    * is used to filter logging behavior
    */
-  public static Boolean DEBUG = false;
+  private static Boolean DEBUG = true;
+
   public static final NTLogger ntLogger = new NTLogger();
   public static final DataLogger dataLogger = new DataLogger();
   public static final Map<Logged, String> loggedRegistry = new HashMap<Logged, String>();
@@ -68,8 +69,8 @@ public class Monologue {
    * Updates all the loggers, ideally called every cycle
    */
   public static void updateAll() {
-    ntLogger.update();
-    dataLogger.update();
+    ntLogger.update(DEBUG);
+    dataLogger.update(DEBUG);
   }
 
   private static List<Field> getAllFields(Class<?> type) {
@@ -88,5 +89,13 @@ public class Monologue {
     result.addAll(Arrays.asList(type.getMethods()));
 
     return result.stream().toList();
+  }
+
+  public static Boolean isDebug() {
+    return DEBUG;
+  }
+
+  public static void setDebug(Boolean debug) {
+    DEBUG = debug;
   }
 }

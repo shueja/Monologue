@@ -125,12 +125,6 @@ public class FieldEval {
 
     LogMetadata logMetadata = AnnoEval.LogMetadata.from(field);
 
-    if (logMetadata.level == LogLevel.DEBUG && !Monologue.DEBUG) {
-      return false;
-    } else if (logMetadata.level == LogLevel.FILE_IN_COMP && !Monologue.DEBUG) {
-      logType = LogType.File;
-    }
-
     String name = logMetadata.relativePath.equals("") ? field.getName() : logMetadata.relativePath;
     String key = rootPath + "/" + name;
     DataType type;
@@ -153,7 +147,8 @@ public class FieldEval {
             getSupplier(field, loggable),
             type,
             key,
-            logMetadata.once
+            logMetadata.once,
+            logMetadata.level
         );
       }
     } else if (logType == LogType.Nt) {
@@ -161,10 +156,21 @@ public class FieldEval {
         Monologue.ntLogger.addSendable(key, (Sendable) getSupplier(field, loggable).get());
       } else {
         Monologue.ntLogger.helper(
+          getSupplier(field, loggable),
+          type,
+          key,
+          logMetadata.once,
+          logMetadata.level
+        );
+        if (logMetadata.level == LogLevel.FILE_IN_COMP && !logMetadata.once) {
+          Monologue.dataLogger.helper(
             getSupplier(field, loggable),
             type,
             key,
-            logMetadata.once);
+            logMetadata.once,
+            logMetadata.level
+          );
+        }
       }
     }
     return true;

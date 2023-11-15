@@ -11,6 +11,7 @@ import java.util.function.*;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -19,50 +20,81 @@ import edu.wpi.first.wpilibj.Timer;
 
 public abstract class GenericLogger {
     public interface LogRunnable extends LongConsumer {
+        String key();
         void close();
+        void open();
     }
     protected GenericLogger() {}
 
-    protected LogRunnable field(LongConsumer run, Runnable close) {
-        return new LogRunnable() {
+    protected void addField(String key, LogLevel level, LongConsumer run, Runnable open, Runnable close) {
+        var runnable =  new LogRunnable() {
+            @Override
+            public String key() {
+                return key;
+            }
             @Override
             public void accept(long timestamp) {
                 run.accept(timestamp);
+            }
+            @Override
+            public void open() {
+                open.run();
             }
             @Override
             public void close() {
                 close.run();
             }
         };
+        runnableMap.get(level).add(runnable);
     }
 
-    protected final Map<String, LogRunnable> map = new HashMap<>();
+    protected void addField(String key, LogLevel level, LongConsumer run) {
+        addField(key, level, run, ()->{}, ()->{});
+    }
+
+    private final Map<LogLevel, ArrayList<LogRunnable>> runnableMap = new HashMap<>(
+        Map.of(
+            LogLevel.COMP, new ArrayList<>(),
+            LogLevel.FILE_IN_COMP, new ArrayList<>(),
+            LogLevel.DEBUG, new ArrayList<>()
+        )
+    );
     protected final Collection<SendableBuilder> sendables = new LinkedHashSet<>();
 
     {%for t in types%}
     public void put(String entryName, {{t.java.ValueType}} value) {
-        put(entryName, value, LogLevel.COMP);
+        put(entryName, value, LogLevel.DEFAULT);
     }
     public void put(String entryName, {{t.java.ValueType}} value, LogLevel level) {}
 
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {}
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, LogLevel level) {}
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
+        add{{t.TypeName}}(entryName, valueSupplier, LogLevel.DEFAULT);
+    }
     {%endfor%}
 
     {%for t in geomTypes%}
     public void put(String entryName, {{t.TypeName}} value) {
-        put(entryName, value, LogLevel.COMP);
+        put(entryName, value, LogLevel.DEFAULT);
     }
     public void put(String entryName, {{t.TypeName}} value, LogLevel level) {
-        putStruct(entryName, {{t.TypeName}}.struct, value);
+        putStruct(entryName, {{t.TypeName}}.struct, value, level);
     }
-    public void add{{t.TypeName}}(String entryName, Supplier<{{t.TypeName}}> valueSupplier) {}
+    public void add{{t.TypeName}}(String entryName, Supplier<{{t.TypeName}}> valueSupplier, LogLevel level) {
+        addStruct(entryName, {{t.TypeName}}.struct, valueSupplier, level);
+    }
+    public void add{{t.TypeName}}(String entryName, Supplier<{{t.TypeName}}> valueSupplier) {
+        add{{t.TypeName}}(entryName, valueSupplier, LogLevel.DEFAULT);
+    }
     {%endfor%}
 
-    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<?extends R> valueSupplier) {}
+    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<?extends R> valueSupplier, LogLevel level) {}
     public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {}
     public <R> void putStruct(String entryName, Struct<R> struct, R value) {
-        putStruct(entryName, struct, value, LogLevel.COMP);
+        putStruct(entryName, struct, value, LogLevel.DEFAULT);
     }
+
+    public void addSendable(String path, Sendable sendable) {};
 
     public void addSendable(String pathPrefix, String name, Sendable sendable) {
         String prefix;
@@ -74,8 +106,6 @@ public abstract class GenericLogger {
         addSendable(prefix, sendable);
     }
 
-    public void addSendable(String path, Sendable sendable) {};
-
     public void addSendable(String pathPrefix, String name, NTSendable sendable) {
         String prefix;
         if (!pathPrefix.endsWith("/")) {
@@ -83,19 +113,48 @@ public abstract class GenericLogger {
         } else {
             prefix = pathPrefix + name + "/";
         }
-        addSendable(prefix, sendable);
+        addSendable(prefix, (Sendable) sendable);
     }
 
     public void addSendable(String path, NTSendable sendable) {
         addSendable(path, (Sendable) sendable);
     };
 
-    public void update() {
+    public Boolean isNT() {return null;}
+
+    Boolean lastDebugValue = true;
+    public void update(boolean debug) {
         long timestamp = (long) (Timer.getFPGATimestamp() * 1e6);
-        for (Map.Entry<String, LogRunnable> entry : map.entrySet()) {
-            var val = entry.getValue();
-            val.accept(timestamp);
+        for (Map.Entry<LogLevel, ArrayList<LogRunnable>> levelRunnables : runnableMap.entrySet()) {
+            if (lastDebugValue != debug) {
+                Boolean wasLoggedBefore = levelRunnables.getKey().shouldLog(lastDebugValue, isNT());
+                Boolean shouldLogNow = levelRunnables.getKey().shouldLog(debug, isNT());
+                if (wasLoggedBefore && !shouldLogNow) {
+                    levelRunnables.getValue().stream().forEach(
+                        (runnable) -> runnable.close()
+                    );
+                }
+                if (!wasLoggedBefore && shouldLogNow) {
+                    levelRunnables.getValue().stream().forEach(
+                        (runnable) -> runnable.open()
+                    );
+                }
+            }
+            if (levelRunnables.getKey().shouldLog(debug, isNT())) {
+                levelRunnables.getValue().stream().forEach(
+                    (runnable) -> runnable.accept(timestamp)
+                );
+            }
         }
         sendables.forEach(SendableBuilder::update);
+        lastDebugValue = debug;
+    }
+
+    public static long[] toLongArray(int[] arr) {
+        long[] newArr = new long[arr.length];
+        for (int i = 0; i < arr.length; i++) {
+            newArr[i] = (long) arr[i];
+        }
+        return newArr;
     }
 }

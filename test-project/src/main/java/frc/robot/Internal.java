@@ -14,8 +14,7 @@ public class Internal implements Logged, Loggable {
   public Internal(String name) {
     this.name = name + "asdfghjklqwertyuiopzxcvbnm,qwertyuio";
     showName = this.name;
-  }
-  ;
+  };
 
   @Override
   public String getPath() {

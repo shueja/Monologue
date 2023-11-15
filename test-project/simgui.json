@@ -8,6 +8,9 @@
   },
   "NetworkTables": {
     "retained": {
+      ".schema": {
+        "open": true
+      },
       "Robot": {
         "open": true
       }
@@ -18,7 +21,14 @@
           "Translation2d##v_translation": {
             "open": true
           }
-        }
+        },
+        "Translation2d##v_/Robot/structTest": {
+          "open": true
+        },
+        "Translation2d##v_/Robot/structTestDebug": {
+          "open": true
+        },
+        "open": true
       },
       "Shuffleboard": {
         "Robot": {
@@ -26,6 +36,14 @@
             "open": true
           },
           "open": true
+        }
+      },
+      "Tracer": {
+        "Robot Loop": {
+          "open": true,
+          "robotPeriodic": {
+            "open": true
+          }
         }
       }
     }
