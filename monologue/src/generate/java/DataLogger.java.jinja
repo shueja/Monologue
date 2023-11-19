@@ -10,16 +10,16 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
 import edu.wpi.first.util.datalog.*;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.DataLogManager;
-import monologue.DataLogSendableBuilder;
 import java.util.function.Supplier;
 import edu.wpi.first.util.struct.Struct;
 
 class DataLogger extends GenericLogger {
-    public DataLogger(){super();
+    private DataLog log = DataLogManager.getLog();
+
+    public DataLogger(){
+        super();
         DataLogManager.logNetworkTables(false);
-        log = DataLogManager.getLog();
     };
-    private DataLog log;
 
     {%for t in types%}
     @Override
@@ -28,32 +28,32 @@ class DataLogger extends GenericLogger {
             return;
         }
 
-        {%if t.TypeName == 'IntegerArray'%}
-            new {{t.java.EntryName}}LogEntry(log, entryName)
-                .append(toLongArray(value));
-        {%else%}
-            new {{t.java.EntryName}}LogEntry(log, entryName).append(value);
-        {%endif%}
+{%if t.TypeName == 'IntegerArray'%}
+        new {{t.java.EntryName}}LogEntry(log, entryName)
+            .append(toLongArray(value));
+{%else%}
+        new {{t.java.EntryName}}LogEntry(log, entryName).append(value);
+{%endif%}
     }
 
     @Override
     public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, LogLevel level) {
         var entry = new {{t.java.EntryName}}LogEntry(log, entryName);
-        {%if t.TypeName == 'IntegerArray'%}
-            addField(
-                entryName,
-                level,
-                timestamp->entry.append(toLongArray(valueSupplier.get()), timestamp)
-            );
-        {%else%}
-            addField(
-                entryName,
-                level,
-                timestamp->entry.append(valueSupplier.get(), timestamp)
-            );
-        {%endif%}
+{%if t.TypeName == 'IntegerArray'%}
+        addField(
+            entryName,
+            level,
+            timestamp->entry.append(toLongArray(valueSupplier.get()), timestamp)
+        );
+{%else%}
+        addField(
+            entryName,
+            level,
+            timestamp->entry.append(valueSupplier.get(), timestamp)
+        );
+{%endif%}
     }
-    {%endfor%}
+{%endfor%}
 
     @Override
     public void addSendable(String path, Sendable sendable) {    
@@ -97,8 +97,7 @@ class DataLogger extends GenericLogger {
 
     public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot, LogLevel level) {
         switch (type) {
-            {%for t in types%}
-               
+        {%for t in types%}
             case {{t.TypeName}}:
                 if (oneShot) {
                     put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
@@ -113,7 +112,7 @@ class DataLogger extends GenericLogger {
             case NTSendable:
                 addSendable(path, (Sendable) supplier.get());
                 break;
-            {%for t in geomTypes%}
+        {%for t in geomTypes%}
             case {{t.TypeName}}:
                 if (oneShot) {
                     put(path, ({{t.TypeName}}) supplier.get(), level);
@@ -121,7 +120,7 @@ class DataLogger extends GenericLogger {
                     add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get(), level);
                 }
                 break;
-            {%endfor%}
+        {%endfor%}
             default:
                 throw new IllegalArgumentException("Invalid data type");
         }

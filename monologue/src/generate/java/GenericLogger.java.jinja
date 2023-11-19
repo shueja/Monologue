@@ -61,7 +61,7 @@ abstract class GenericLogger {
     );
     protected final Collection<SendableBuilder> sendables = new LinkedHashSet<>();
 
-    {%for t in types%}
+{%for t in types%}
     public void put(String entryName, {{t.java.ValueType}} value) {
         put(entryName, value, LogLevel.DEFAULT);
     }
@@ -71,9 +71,9 @@ abstract class GenericLogger {
     public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
         add{{t.TypeName}}(entryName, valueSupplier, LogLevel.DEFAULT);
     }
-    {%endfor%}
+{%endfor%}
 
-    {%for t in geomTypes%}
+{%for t in geomTypes%}
     public void put(String entryName, {{t.TypeName}} value) {
         put(entryName, value, LogLevel.DEFAULT);
     }
@@ -86,7 +86,7 @@ abstract class GenericLogger {
     public void add{{t.TypeName}}(String entryName, Supplier<{{t.TypeName}}> valueSupplier) {
         add{{t.TypeName}}(entryName, valueSupplier, LogLevel.DEFAULT);
     }
-    {%endfor%}
+{%endfor%}
 
     public <R> void addStruct(String entryName, Struct<R> struct, Supplier<?extends R> valueSupplier, LogLevel level) {}
     public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {}

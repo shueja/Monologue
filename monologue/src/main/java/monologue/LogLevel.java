@@ -15,9 +15,12 @@ public enum LogLevel {
      */
     FILE_IN_COMP;
 
+    /**
+     * The default log level: {@link LogLevel#COMP}
+     */
     public static final LogLevel DEFAULT = COMP;
 
-    public Boolean shouldLog(boolean debug, boolean nt) {
+    Boolean shouldLog(boolean debug, boolean nt) {
         switch (this) {
             case COMP:
                 return true;

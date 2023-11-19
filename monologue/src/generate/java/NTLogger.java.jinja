@@ -45,41 +45,40 @@ class NTLogger extends GenericLogger {
 
         if (!topics.containsKey(entryName)) {
             var topic = table.get{{t.java.EntryName}}Topic(entryName);
-            {%if t.TypeName == 'Raw'%}
+{%if t.TypeName == 'Raw'%}
             var publisher = topic.publish("raw");
-            {%else%}
+{%else%}
             var publisher = topic.publish();
-            {%endif%}
-            
+{%endif%}
             published.put(entryName, publisher.getHandle());
             topics.put(entryName, topic);
         }
 
         if (!published.containsKey(entryName)) {
-            {%if t.TypeName == 'Raw'%}
+{%if t.TypeName == 'Raw'%}
             published.put(entryName, (({{t.java.EntryName}}Topic) topics.get(entryName)).publish("raw").getHandle());
-            {%else%}
+{%else%}
             published.put(entryName, (({{t.java.EntryName}}Topic) topics.get(entryName)).publish().getHandle());
-            {%endif%}
+{%endif%}
         }
-        {%if t.TypeName == 'IntegerArray'%}
+{%if t.TypeName == 'IntegerArray'%}
         NetworkTablesJNI.set{{t.java.EntryName}}(published.get(entryName), 0, toLongArray(value));
-        {%else%}
+{%else%}
         NetworkTablesJNI.set{{t.java.EntryName}}(published.get(entryName), 0, value);
-        {%endif%}
+{%endif%}
     }
 
     @Override
     public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, LogLevel level) {
         var topic = table.get{{t.java.EntryName}}Topic(entryName);
-        {%if t.TypeName == 'Raw'%}
+{%if t.TypeName == 'Raw'%}
         var entry = topic.getEntry("raw", {{t.java.EmptyValue}});
-        {%elif t.TypeName == 'IntegerArray'%}
+{%elif t.TypeName == 'IntegerArray'%}
         var entry = topic.getEntry(new long[] {});
-        {%else%}
+{%else%}
         var entry = topic.getEntry({{t.java.EmptyValue}});
-        {%endif%}
-        {%if t.TypeName == 'IntegerArray'%}
+{%endif%}
+{%if t.TypeName == 'IntegerArray'%}
             addField(
                 entryName,
                 level,
@@ -90,7 +89,7 @@ class NTLogger extends GenericLogger {
                 () -> entry.set(toLongArray(valueSupplier.get())),
                 entry::unpublish
             );
-        {%else%}
+{%else%}
             addField(
                 entryName,
                 level,
@@ -98,9 +97,9 @@ class NTLogger extends GenericLogger {
                 () -> entry.set(valueSupplier.get()),
                 entry::unpublish
             );
-        {%endif%}
+{%endif%}
     }
-    {%endfor%}
+{%endfor%}
 
     @Override
     public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier, LogLevel level) {
@@ -165,7 +164,7 @@ class NTLogger extends GenericLogger {
 
     public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot, LogLevel level) {
         switch (type) {
-            {%for t in types%}
+{%for t in types%}
             case {{t.TypeName}}:
                 if (oneShot) {
                     put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
@@ -173,11 +172,11 @@ class NTLogger extends GenericLogger {
                     add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
                 }
                 break;
-            {%endfor%}
+{%endfor%}
             case Sendable:
                 addSendable(path, (Sendable) supplier.get());
                 break;
-            {%for t in geomTypes%}
+{%for t in geomTypes%}
             case {{t.TypeName}}:
                 if (oneShot) {
                     put(path, ({{t.TypeName}}) supplier.get(), level);
@@ -185,7 +184,7 @@ class NTLogger extends GenericLogger {
                     add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get(), level);
                 }
                 break;
-            {%endfor%}
+{%endfor%}
             default:
                 throw new IllegalArgumentException("Invalid data type");
         }
