@@ -1,4 +1,4 @@
-package monologue.evaluation;
+package monologue;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -8,14 +8,11 @@ import java.util.function.Supplier;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.DriverStation;
-import monologue.DataType;
-import monologue.LogLevel;
-import monologue.Logged;
-import monologue.Monologue;
-import monologue.evaluation.AnnoEval.LogMetadata;
-import monologue.evaluation.AnnoEval.LogType;
+import monologue.EvalAnno.LogMetadata;
+import monologue.EvalAnno.LogType;
+import monologue.Annotations.IgnoreLogged;
 
-public class FieldEval {
+class EvalField {
   private static boolean isNull(Field field, Object obj) {
     boolean isNull = true;
     try {
@@ -51,10 +48,12 @@ public class FieldEval {
     field.setAccessible(true);
 
     if (isNull(field, loggable)) {
+      MonologueLog.RuntimeLog(rootPath + "." + field.getName() + " is null");
       return;
     }
 
     if (evalNestedLogged(field, loggable, rootPath)) {
+      MonologueLog.RuntimeLog(rootPath + "." + field.getName() + " was logged recursively");
       return;
     }
 
@@ -64,7 +63,7 @@ public class FieldEval {
   private static Boolean evalNestedLogged(Field field, Logged loggable, String rootPath) {
     final Optional<Object> fieldOptional = getField(field, loggable);
 
-    if (fieldOptional.isEmpty()) {
+    if (fieldOptional.isEmpty() || field.isAnnotationPresent(IgnoreLogged.class)) {
       return false;
     }
 
@@ -88,11 +87,11 @@ public class FieldEval {
           if (obj instanceof Logged) {
             String pathOverride = ((Logged) obj).getPath();
             if (pathOverride.equals("")) {
-              pathOverride = obj.getClass().getSimpleName() + "[" + idx++ + "]";
+              pathOverride = obj.getClass().getSimpleName();
             }
             Monologue.logObj(
                 (Logged) obj,
-                rootPath + "/" + field.getName() + "/" + pathOverride);
+                rootPath + "/" + field.getName() + "/" + pathOverride + "[" + idx++ + "]");
             recursed = true;
           }
         }
@@ -104,11 +103,11 @@ public class FieldEval {
         if (obj instanceof Logged) {
           String pathOverride = ((Logged) obj).getPath();
           if (pathOverride.equals("")) {
-            pathOverride = obj.getClass().getSimpleName() + "[" + idx++ + "]";
+            pathOverride = obj.getClass().getSimpleName();
           }
           Monologue.logObj(
               (Logged) obj,
-              rootPath + "/" + field.getName() + "/" + pathOverride);
+              rootPath + "/" + field.getName() + "/" + pathOverride + "[" + idx++ + "]");
           recursed = true;
         }
       }
@@ -117,13 +116,13 @@ public class FieldEval {
   }
 
   private static Boolean evalFieldAnnotations(Field field, Logged loggable, String rootPath) {
-    LogType logType = AnnoEval.annoEval(field);
+    LogType logType = EvalAnno.annoEval(field);
 
     if (logType == LogType.None) {
       return false;
     }
 
-    LogMetadata logMetadata = AnnoEval.LogMetadata.from(field);
+    LogMetadata logMetadata = EvalAnno.LogMetadata.from(field);
 
     String name = logMetadata.relativePath.equals("") ? field.getName() : logMetadata.relativePath;
     String key = rootPath + "/" + name;
@@ -132,8 +131,7 @@ public class FieldEval {
     try {
       type = DataType.fromClass(field.getType());
     } catch (IllegalArgumentException e) {
-      DriverStation.reportWarning("Tried to log invalid type " + name + "(" + field.getType() + ") in " + rootPath,
-          false);
+      MonologueLog.RuntimeWarn("Tried to log invalid type " + name + "(" + field.getType() + ") in " + rootPath);
       return false;
     }
 

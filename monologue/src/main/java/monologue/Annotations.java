@@ -87,4 +87,14 @@ public class Annotations {
      */
     public String path() default "";
   }
+
+  /**
+   * Makes the annotated field containing a {@link Logged} class not be recursed into.
+   * 
+   * @apiNote this will also make fields inside the object in the field not be logged
+   */
+  @Documented
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ ElementType.FIELD })
+  public @interface IgnoreLogged {}
 }

@@ -8,9 +8,6 @@
   },
   "NetworkTables": {
     "retained": {
-      ".schema": {
-        "open": true
-      },
       "Robot": {
         "open": true
       }
@@ -27,6 +24,11 @@
         },
         "Translation2d##v_/Robot/structTestDebug": {
           "open": true
+        },
+        "internals": {
+          "asdfghjklqwertyuiopzxcvbnm,qwertyuio": {
+            "open": true
+          }
         },
         "open": true
       },
@@ -45,6 +47,9 @@
             "open": true
           }
         }
+      },
+      "notfound": {
+        "open": true
       }
     }
   }

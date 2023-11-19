@@ -1,17 +1,14 @@
-package monologue.evaluation;
+package monologue;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.DriverStation;
-import monologue.DataType;
-import monologue.Logged;
-import monologue.Monologue;
-import monologue.evaluation.AnnoEval.LogMetadata;
-import monologue.evaluation.AnnoEval.LogType;
+import monologue.EvalAnno.LogMetadata;
+import monologue.EvalAnno.LogType;
 
-public class MethodEval {
+class EvalMethod {
 
   private static Supplier<?> getSupplier(Method method, Logged loggable) {
     return () -> {
@@ -30,7 +27,7 @@ public class MethodEval {
 
   private static void evalMethodAnnotations(Method method, Logged loggable, String rootPath) {
 
-    LogType logType = AnnoEval.annoEval(method);
+    LogType logType = EvalAnno.annoEval(method);
 
     if (logType == LogType.None) { return; }
 
@@ -40,7 +37,7 @@ public class MethodEval {
       return;
     }
 
-    LogMetadata logMetadata = AnnoEval.LogMetadata.from(method);
+    LogMetadata logMetadata = EvalAnno.LogMetadata.from(method);
 
     String name = logMetadata.relativePath.isEmpty() ? method.getName() : logMetadata.relativePath;
     String path = rootPath + "/" + name;
@@ -49,7 +46,13 @@ public class MethodEval {
     try{
       type = DataType.fromClass(method.getReturnType());
     } catch (IllegalArgumentException e) {
-      DriverStation.reportWarning("Tried to log invalid type " + name + " -> " + method.getReturnType() + " in " + rootPath, false);
+      MonologueLog.RuntimeWarn("Tried to log invalid type " + name + " -> " + method.getReturnType() + " in " + rootPath);
+      return;
+    }
+
+    if (type == DataType.NTSendable || type == DataType.Sendable) {
+      MonologueLog.RuntimeWarn("Tried to log invalid type " + name + " -> " + method.getReturnType() + " in " + rootPath
+        + "Sendable isn't supported yet for methods");
       return;
     }
 

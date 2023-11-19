@@ -10,11 +10,6 @@ import edu.wpi.first.math.geometry.*;
 
 /** Add your docs here. */
 public class Geometry implements Logged {
-  @LogNT
-  public String getStringPath()
-  {
-    return getFullPath();
-  }
   @LogNT private Pose2d m_pose2d = new Pose2d();
 
   @LogNT

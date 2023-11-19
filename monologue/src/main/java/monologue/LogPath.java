@@ -1,6 +1,6 @@
 package monologue;
 
-public class LogPath {
+class LogPath {
     private static final String BLACKLIST = "";
     private final String[] paths;
 

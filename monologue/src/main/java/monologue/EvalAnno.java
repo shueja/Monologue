@@ -1,4 +1,4 @@
-package monologue.evaluation;
+package monologue;
 
 import java.lang.reflect.AccessibleObject;
 
@@ -6,9 +6,8 @@ import monologue.Annotations.LogFile;
 import monologue.Annotations.LogNT;
 import monologue.Annotations.LogOnceFile;
 import monologue.Annotations.LogOnceNT;
-import monologue.LogLevel;
 
-public class AnnoEval {
+class EvalAnno {
     
     public static enum LogType {
         File, Nt, None;

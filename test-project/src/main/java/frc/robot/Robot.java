@@ -4,8 +4,7 @@
 
 package frc.robot;
 
-import monologue.MonoRobot;
-import monologue.Tracer;
+import monologue.Logged;
 import monologue.Monologue;
 import monologue.Annotations.*;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -13,28 +12,42 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.BooleanEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.DriverStation.MatchType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.inheritance.Child;
+
 import static monologue.LogLevel.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
-public class Robot extends MonoRobot {
+public class Robot extends TimedRobot implements Logged {
   @LogOnceNT private boolean flippingBool = false;
   private int samples = 0;
   @LogNT(level = DEBUG) int debugSamples = 0;
   @LogNT(level = FILE_IN_COMP) int lowbandwidthSamples = 0;
-  @LogNT(level = COMP) int compSamples = 0; 
-  boolean dataLog = false;
+  @LogNT(level = COMP) int compSamples = 0;
 
-  ArrayList<Internal> m_internals = new ArrayList<>();
+  ArrayList<Internal> internals = new ArrayList<>(List.of(
+    new Internal(""),
+    new Internal(""),
+    new Internal("")
+  ));
   double totalOfAvgs = 0;
   double avgsTaken = 0;
 
   @SuppressWarnings("unused")
   private Geometry geometry = new Geometry();
+
+  @IgnoreLogged
+  private Geometry geometryIgnored = new Geometry();
+
+  @SuppressWarnings("unused")
+  private Child child = new Child();
 
   private Translation2d translation2d = new Translation2d(1.0, 2.0);
 
@@ -45,6 +58,11 @@ public class Robot extends MonoRobot {
 
   BooleanEntry debugEntry = NetworkTableInstance.getDefault().getBooleanTopic("/debug").getEntry(false);
 
+  public Robot() {
+    super();
+    Monologue.setupMonologue(this, "/Robot", true);
+  }
+
   @Override
   public void robotInit() {
     debugEntry.set(true);
@@ -52,25 +70,31 @@ public class Robot extends MonoRobot {
 
   @Override
   public void robotPeriodic() {
-    Tracer.startTrace("robotPeriodic");
     Monologue.setDebug(debugEntry.get());
-    Tracer.traceFunc("Monologue Update", Monologue::updateAll);
+    Monologue.updateAll();
     field.getRobotObject().setPose(new Pose2d(samples / 100.0, 0, new Rotation2d()));
     log("stringValue", samples, COMP);
     log("stringValueDebug", samples, DEBUG);
     log("structTestDebug", translation2d, DEBUG);
-    SmartDashboard.putBoolean(getPath(), dataLog);
     samples++;
     debugSamples++;
     lowbandwidthSamples++;
     compSamples++;
     flippingBool = !flippingBool;
+    Internal.staticBool = !Internal.staticBool;
     translation2d = new Translation2d(
-      (Math.random()+0.52) * translation2d.getX(),
-      (Math.random()+0.52) * translation2d.getY()
+      (Math.random()+0.55) * translation2d.getX(),
+      (Math.random()+0.55) * translation2d.getY()
     );
-    Tracer.endTrace();
   }
+
+  @Override
+    public void driverStationConnected() {
+        //if we are in a match disable debug
+        Monologue.setDebug(
+            DriverStation.getMatchType() == MatchType.None
+        );
+    }
 
   @Override
   public void autonomousInit() {}

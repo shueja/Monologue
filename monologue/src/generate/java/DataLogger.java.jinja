@@ -10,11 +10,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
 import edu.wpi.first.util.datalog.*;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.DataLogManager;
-import monologue.util.DataLogSendableBuilder;
+import monologue.DataLogSendableBuilder;
 import java.util.function.Supplier;
 import edu.wpi.first.util.struct.Struct;
 
-public class DataLogger extends GenericLogger {
+class DataLogger extends GenericLogger {
     public DataLogger(){super();
         DataLogManager.logNetworkTables(false);
         log = DataLogManager.getLog();

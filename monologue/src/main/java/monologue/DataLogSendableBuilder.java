@@ -1,4 +1,4 @@
-package monologue.util;
+package monologue;
 
 import edu.wpi.first.networktables.NTSendableBuilder;
 import edu.wpi.first.networktables.NetworkTable;
@@ -35,7 +35,7 @@ import java.util.function.LongConsumer;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
-public class DataLogSendableBuilder implements NTSendableBuilder {
+class DataLogSendableBuilder implements NTSendableBuilder {
   private static final DataLog log = DataLogManager.getLog();
   private static final NetworkTable rootTable =
       NetworkTableInstance.getDefault().getTable("DataLogSendable");
@@ -47,7 +47,7 @@ public class DataLogSendableBuilder implements NTSendableBuilder {
   private final List<AutoCloseable> closeables = new ArrayList<>();
   private String prefix;
 
-  public DataLogSendableBuilder(String prefix) {
+  DataLogSendableBuilder(String prefix) {
     if (!prefix.endsWith("/")) {
       this.prefix = prefix + "/";
     } else {

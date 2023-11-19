@@ -2,17 +2,13 @@ package monologue;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.WeakHashMap;
 
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
-import monologue.evaluation.FieldEval;
-import monologue.evaluation.MethodEval;
 
 public class Monologue {
 
@@ -22,9 +18,11 @@ public class Monologue {
    */
   private static Boolean DEBUG = true;
 
-  public static final NTLogger ntLogger = new NTLogger();
-  public static final DataLogger dataLogger = new DataLogger();
-  public static final Map<Logged, String> loggedRegistry = new HashMap<Logged, String>();
+  private static Boolean HAS_SETUP_BEEN_CALLED = false;
+
+  static final NTLogger ntLogger = new NTLogger();
+  static final DataLogger dataLogger = new DataLogger();
+  static final WeakHashMap<Logged, String> loggedRegistry = new WeakHashMap<Logged, String>();
 
   /**
    * Is the main entry point for the monologue library.
@@ -36,14 +34,29 @@ public class Monologue {
    * 
    * @param loggable the root Logged object to log
    * @param rootPath the nt/datalog path to log to
+   * 
+   * @apiNote Should only be called once, if another {@link Logged} tree needs to be created
+   *        use {@link #logObj(Logged, String)} for additional trees
    */
   public static void setupMonologue(Logged loggable, String rootPath, Boolean debug) {
+    if (HAS_SETUP_BEEN_CALLED) {
+      throw new IllegalStateException("Monologue.setupMonologue() has already been called");
+    }
+    HAS_SETUP_BEEN_CALLED = true;
+
+    MonologueLog.RuntimeLog("Monologue.setupMonologue() called on " + loggable.getClass().getName());
     DEBUG = debug;
     NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), "", "");
     logObj(loggable, rootPath);
   }
 
   /**
+   * Will interate over every element of the provided {@link Logged} object and
+   * handle the data transmission from there.
+   * 
+   * Will also recursively check field values for classes that implement {@link Logged}
+   * and log those as well.
+   * 
    * @param loggable the obj to scrape
    * @param path     the path to log to
    */
@@ -54,14 +67,15 @@ public class Monologue {
     } else if (lpath.isRoot()) {
       throw new IllegalArgumentException("Root path of / is not allowed");
     }
+    MonologueLog.RuntimeLog("Monologue.logObj() called on " + loggable.getClass().getName() + " with path " + path);
 
     loggedRegistry.put(loggable, path);
 
     for (Field field : getAllFields(loggable.getClass())) {
-      FieldEval.evalField(field, loggable, path);
+      EvalField.evalField(field, loggable, path);
     }
     for (Method method : getAllMethods(loggable.getClass())) {
-      MethodEval.evalMethod(method, loggable, path);
+      EvalMethod.evalMethod(method, loggable, path);
     }
   }
 
@@ -74,21 +88,27 @@ public class Monologue {
   }
 
   private static List<Field> getAllFields(Class<?> type) {
-    Set<Field> result = new HashSet<Field>();
+    List<Field> result = new ArrayList<Field>();
 
-    result.addAll(Arrays.asList(type.getDeclaredFields()));
-    result.addAll(Arrays.asList(type.getFields()));
+    Class<?> i = type;
+    while (i != null && i != Object.class) {
+        Collections.addAll(result, i.getDeclaredFields());
+        i = i.getSuperclass();
+    }
 
-    return result.stream().toList();
+    return result;
   }
 
   private static List<Method> getAllMethods(Class<?> type) {
-    Set<Method> result = new HashSet<Method>();
+    List<Method> result = new ArrayList<Method>();
 
-    result.addAll(Arrays.asList(type.getDeclaredMethods()));
-    result.addAll(Arrays.asList(type.getMethods()));
+    Class<?> i = type;
+    while (i != null && i != Object.class) {
+        Collections.addAll(result, i.getDeclaredMethods());
+        i = i.getSuperclass();
+    }
 
-    return result.stream().toList();
+    return result;
   }
 
   public static Boolean isDebug() {
@@ -97,5 +117,6 @@ public class Monologue {
 
   public static void setDebug(Boolean debug) {
     DEBUG = debug;
+    MonologueLog.RuntimeLog("Monologue.setDebug() called with " + debug);
   }
 }
