@@ -11,6 +11,7 @@ import edu.wpi.first.util.datalog.*;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.DataLogManager;
 import java.util.function.Supplier;
+import java.util.function.LongConsumer;
 import edu.wpi.first.util.struct.Struct;
 
 class DataLogger extends GenericLogger {
@@ -39,17 +40,52 @@ class DataLogger extends GenericLogger {
     @Override
     public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, LogLevel level) {
         var entry = new {{t.java.EntryName}}LogEntry(log, entryName);
+
+        LongConsumer consumer;
 {%if t.TypeName == 'IntegerArray'%}
+
+        if (this.isLazy()) {
+            consumer = new LongConsumer() {
+                private long[] lastValue = new long[] {};
+                @Override
+                public void accept(long timestamp) {
+                    var value = toLongArray(valueSupplier.get());
+                    if (value != lastValue) {
+                        entry.append(value, timestamp);
+                        lastValue = value;
+                    }
+                }
+            };
+        } else {
+            consumer = (timestamp) -> entry.append(toLongArray(valueSupplier.get()), timestamp);
+        }
+
         addField(
             entryName,
             level,
-            timestamp->entry.append(toLongArray(valueSupplier.get()), timestamp)
+            consumer
         );
 {%else%}
+        if (this.isLazy()) {
+            consumer = new LongConsumer() {
+                private {{t.java.ValueType}} lastValue = {{t.java.EmptyValue}};
+                @Override
+                public void accept(long timestamp) {
+                    var value = valueSupplier.get();
+                    if (value != lastValue) {
+                        entry.append(value, timestamp);
+                        lastValue = value;
+                    }
+                }
+            };
+        } else {
+            consumer = (timestamp) -> entry.append(valueSupplier.get(), timestamp);
+        }
+
         addField(
             entryName,
             level,
-            timestamp->entry.append(valueSupplier.get(), timestamp)
+            consumer
         );
 {%endif%}
     }

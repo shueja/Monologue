@@ -24,6 +24,40 @@ public class Monologue {
   static final DataLogger dataLogger = new DataLogger();
   static final WeakHashMap<Logged, String> loggedRegistry = new WeakHashMap<Logged, String>();
 
+
+  public static class MonologueConfig {
+    public Boolean debug = true;
+    public Boolean lazyNT = false;
+    public Boolean lazyFile = false;
+    public String rootPath = "Robot";
+
+    public MonologueConfig() {}
+
+    public static MonologueConfig defaultConfig() {
+      return new MonologueConfig();
+    }
+
+    public MonologueConfig withDebug(Boolean debug) {
+      this.debug = debug;
+      return this;
+    }
+
+    public MonologueConfig withLazyNT(Boolean lazyNT) {
+      this.lazyNT = lazyNT;
+      return this;
+    }
+
+    public MonologueConfig withLazyFile(Boolean lazyFile) {
+      this.lazyFile = lazyFile;
+      return this;
+    }
+
+    public MonologueConfig withRootPath(String rootPath) {
+      this.rootPath = rootPath;
+      return this;
+    }
+  }
+
   /**
    * Is the main entry point for the monologue library.
    * It will interate over every member of the provided Logged object and
@@ -33,21 +67,42 @@ public class Monologue {
    * and log those as well.
    * 
    * @param loggable the root Logged object to log
-   * @param rootPath the nt/datalog path to log to
+   * @param config   the configuration for the monologue library
    * 
    * @apiNote Should only be called once, if another {@link Logged} tree needs to be created
    *        use {@link #logObj(Logged, String)} for additional trees
    */
-  public static void setupMonologue(Logged loggable, String rootPath, Boolean debug) {
+  public static void setupMonologue(Logged loggable, MonologueConfig config) {
     if (HAS_SETUP_BEEN_CALLED) {
       throw new IllegalStateException("Monologue.setupMonologue() has already been called");
     }
     HAS_SETUP_BEEN_CALLED = true;
 
     MonologueLog.RuntimeLog("Monologue.setupMonologue() called on " + loggable.getClass().getName());
-    DEBUG = debug;
+    DEBUG = config.debug;
+    ntLogger.setLazy(config.lazyNT);
+    dataLogger.setLazy(config.lazyFile);
     NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), "", "");
-    logObj(loggable, rootPath);
+    logObj(loggable, config.rootPath);
+  }
+
+  /**
+   * Is the main entry point for the monologue library.
+   * It will interate over every member of the provided Logged object and
+   * evaluated if it should be logged to the network tables or to a file.
+   * 
+   * Will also recursively check field values for classes that implement Logged
+   * and log those as well.
+   * 
+   * @param loggable the root Logged object to log
+   * @param rootpath the root path to log to
+   * @param debug    the debug flag for the monologue library
+   * 
+   * @apiNote Should only be called once, if another {@link Logged} tree needs to be created
+   *        use {@link #logObj(Logged, String)} for additional trees
+   */
+  public static void setupMonologue(Logged loggable, String rootpath, Boolean debug) {
+    setupMonologue(loggable, MonologueConfig.defaultConfig().withRootPath(rootpath).withDebug(debug));
   }
 
   /**

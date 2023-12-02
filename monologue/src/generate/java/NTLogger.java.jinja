@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.LongConsumer;
 import java.util.function.Supplier;
 
 class NTLogger extends GenericLogger {
@@ -78,25 +79,55 @@ class NTLogger extends GenericLogger {
 {%else%}
         var entry = topic.getEntry({{t.java.EmptyValue}});
 {%endif%}
+        LongConsumer consumer;
 {%if t.TypeName == 'IntegerArray'%}
-            addField(
-                entryName,
-                level,
-                (timestamp) -> entry.set(
-                    toLongArray(valueSupplier.get()),
-                    timestamp
-                ),
-                () -> entry.set(toLongArray(valueSupplier.get())),
-                entry::unpublish
-            );
+        if (this.isLazy()) {
+            consumer = new LongConsumer() {
+                private long[] lastValue = new long[] {};
+                @Override
+                public void accept(long timestamp) {
+                    var value = toLongArray(valueSupplier.get());
+                    if (value != lastValue) {
+                        entry.set(value, timestamp);
+                        lastValue = value;
+                    }
+                }
+            };
+        } else {
+            consumer = (timestamp) -> entry.set(toLongArray(valueSupplier.get()), timestamp);
+        }
+
+        addField(
+            entryName,
+            level,
+            consumer,
+            () -> entry.set(toLongArray(valueSupplier.get())),
+            entry::unpublish
+        );
 {%else%}
-            addField(
-                entryName,
-                level,
-                (timestamp) -> entry.set(valueSupplier.get(), timestamp),
-                () -> entry.set(valueSupplier.get()),
-                entry::unpublish
-            );
+        if (this.isLazy()) {
+            consumer = new LongConsumer() {
+                private {{t.java.ValueType}} lastValue = {{t.java.EmptyValue}};
+                @Override
+                public void accept(long timestamp) {
+                    var value = valueSupplier.get();
+                    if (value != lastValue) {
+                        entry.set(value, timestamp);
+                        lastValue = value;
+                    }
+                }
+            };
+        } else {
+            consumer = (timestamp) -> entry.set(valueSupplier.get(), timestamp);
+        }
+
+        addField(
+            entryName,
+            level,
+            consumer,
+            () -> entry.set(valueSupplier.get()),
+            entry::unpublish
+        );
 {%endif%}
     }
 {%endfor%}

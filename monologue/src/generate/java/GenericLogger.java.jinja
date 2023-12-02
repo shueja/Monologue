@@ -120,6 +120,12 @@ abstract class GenericLogger {
         addSendable(path, (Sendable) sendable);
     };
 
+    private Boolean _isLazy = false;
+    public void setLazy(Boolean isLazy) {
+        this._isLazy = isLazy;
+    }
+    public Boolean isLazy() {return _isLazy;}
+
     public Boolean isNT() {return null;}
 
     Boolean lastDebugValue = true;
