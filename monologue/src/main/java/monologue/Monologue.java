@@ -13,10 +13,10 @@ import edu.wpi.first.wpilibj.DataLogManager;
 public class Monologue {
 
   /**
-   * The Monologue library wide debug flag,
+   * The Monologue library wide FILE_ONLY flag,
    * is used to filter logging behavior
    */
-  private static Boolean DEBUG = true;
+  private static Boolean FILE_ONLY = true;
 
   private static Boolean HAS_SETUP_BEEN_CALLED = false;
 
@@ -26,7 +26,7 @@ public class Monologue {
 
 
   public static class MonologueConfig {
-    public Boolean debug = true;
+    public Boolean fileOnly = true;
     public Boolean lazyNT = false;
     public Boolean lazyFile = false;
     public String rootPath = "Robot";
@@ -37,8 +37,8 @@ public class Monologue {
       return new MonologueConfig();
     }
 
-    public MonologueConfig withDebug(Boolean debug) {
-      this.debug = debug;
+    public MonologueConfig withFileOnly(Boolean fileOnly) {
+      this.fileOnly = fileOnly;
       return this;
     }
 
@@ -79,7 +79,7 @@ public class Monologue {
     HAS_SETUP_BEEN_CALLED = true;
 
     MonologueLog.RuntimeLog("Monologue.setupMonologue() called on " + loggable.getClass().getName());
-    DEBUG = config.debug;
+    FILE_ONLY = config.fileOnly;
     ntLogger.setLazy(config.lazyNT);
     dataLogger.setLazy(config.lazyFile);
     NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), "", "");
@@ -94,15 +94,15 @@ public class Monologue {
    * Will also recursively check field values for classes that implement Logged
    * and log those as well.
    * 
-   * @param loggable the root Logged object to log
-   * @param rootpath the root path to log to
-   * @param debug    the debug flag for the monologue library
+   * @param loggable  the root Logged object to log
+   * @param rootpath  the root path to log to
+   * @param fileOnly  the FILE_ONLY flag for the monologue library
    * 
    * @apiNote Should only be called once, if another {@link Logged} tree needs to be created
    *        use {@link #logObj(Logged, String)} for additional trees
    */
-  public static void setupMonologue(Logged loggable, String rootpath, Boolean debug) {
-    setupMonologue(loggable, MonologueConfig.defaultConfig().withRootPath(rootpath).withDebug(debug));
+  public static void setupMonologue(Logged loggable, String rootpath, Boolean fileOnly) {
+    setupMonologue(loggable, MonologueConfig.defaultConfig().withRootPath(rootpath).withFileOnly(fileOnly));
   }
 
   /**
@@ -138,8 +138,8 @@ public class Monologue {
    * Updates all the loggers, ideally called every cycle
    */
   public static void updateAll() {
-    ntLogger.update(DEBUG);
-    dataLogger.update(DEBUG);
+    ntLogger.update(FILE_ONLY);
+    dataLogger.update(FILE_ONLY);
   }
 
   private static List<Field> getAllFields(Class<?> type) {
@@ -166,12 +166,12 @@ public class Monologue {
     return result;
   }
 
-  public static Boolean isDebug() {
-    return DEBUG;
+  public static Boolean isFileOnly() {
+    return FILE_ONLY;
   }
 
-  public static void setDebug(Boolean debug) {
-    DEBUG = debug;
-    MonologueLog.RuntimeLog("Monologue.setDebug() called with " + debug);
+  public static void setFileOnly(Boolean fileOnly) {
+    FILE_ONLY = fileOnly;
+    MonologueLog.RuntimeLog("Monologue.setFileOnly() called with " + fileOnly);
   }
 }

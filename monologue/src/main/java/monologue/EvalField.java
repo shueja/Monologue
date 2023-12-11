@@ -160,15 +160,15 @@ class EvalField {
           logMetadata.once,
           logMetadata.level
         );
-        if (logMetadata.level == LogLevel.FILE_IN_COMP && !logMetadata.once) {
-          Monologue.dataLogger.helper(
-            getSupplier(field, loggable),
-            type,
-            key,
-            logMetadata.once,
-            logMetadata.level
-          );
-        }
+        // if (logMetadata.level == LogLevel.FILE_IN_COMP && !logMetadata.once) {
+        //   Monologue.dataLogger.helper(
+        //     getSupplier(field, loggable),
+        //     type,
+        //     key,
+        //     logMetadata.once,
+        //     logMetadata.level
+        //   );
+        // }
       }
     }
     return true;

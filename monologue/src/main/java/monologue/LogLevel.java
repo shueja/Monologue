@@ -2,38 +2,33 @@ package monologue;
 
 public enum LogLevel {
     /**
-     * Only on when in debug
+     * Will only be used when <code>FILE_ONLY</code> is set to <code>false</code>,
+     * the only benefit to this is less performance overhead
      */
-    DEBUG,
+    NOT_FILE_ONLY,
     /**
-     * Always on with same behavior in and outside of debug
+     * When in <code>FILE_ONLY</code> mode, only log to file otherwise log to both
      */
-    COMP,
+    DEFAULT,
     /**
-     * When not in debug(aka comp) any nt loggers with this
-     * level will be sent straight to file, file loggers are not affected
+     * Always on with same behavior independent of <code>FILE_ONLY</code> flag
      */
-    FILE_IN_COMP;
+    OVERRIDE_FILE_ONLY;
 
-    /**
-     * The default log level: {@link LogLevel#COMP}
-     */
-    public static final LogLevel DEFAULT = COMP;
-
-    Boolean shouldLog(boolean debug, boolean nt) {
+    Boolean shouldLog(boolean fileOnly, boolean nt) {
         switch (this) {
-            case COMP:
+            case OVERRIDE_FILE_ONLY:
                 return true;
-            case FILE_IN_COMP:
-                if (debug && nt) {
+            case DEFAULT:
+                if (!fileOnly && nt) {
                     return true;
-                } else if (!debug && !nt) {
+                } else if (fileOnly && !nt) {
                     return true;
                 } else {
                     return false;
                 }
-            case DEBUG:
-                return debug;
+            case NOT_FILE_ONLY:
+                return !fileOnly;
             default:
                 return false;
         }

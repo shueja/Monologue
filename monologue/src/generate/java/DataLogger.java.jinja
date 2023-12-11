@@ -25,7 +25,7 @@ class DataLogger extends GenericLogger {
     {%for t in types%}
     @Override
     public void put(String entryName, {{t.java.ValueType}} value, LogLevel level) {
-        if (level == LogLevel.DEBUG && !Monologue.isDebug()) {
+        if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
             return;
         }
 
@@ -124,7 +124,7 @@ class DataLogger extends GenericLogger {
 
     @Override
     public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {
-        if (level == LogLevel.DEBUG && !Monologue.isDebug()) {
+        if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
             return;
         }
 

@@ -27,14 +27,14 @@ class NTLogger extends GenericLogger {
     {%for t in types%}
     @Override
     public void put(String entryName, {{t.java.ValueType}} value, LogLevel level) {
-        if (level == LogLevel.DEBUG && !Monologue.isDebug()) {
+        if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
             if (published.containsKey(entryName) && topics.containsKey(entryName)) {
                 NetworkTablesJNI.unpublish(
                     published.remove(entryName)
                 );
             }
             return;
-        } else if (level == LogLevel.FILE_IN_COMP && !Monologue.isDebug()) {
+        } else if (level == LogLevel.DEFAULT && Monologue.isFileOnly()) {
             Monologue.dataLogger.put(entryName, value, level);
             if (published.containsKey(entryName) && topics.containsKey(entryName)) {
                 NetworkTablesJNI.unpublish(
@@ -148,13 +148,13 @@ class NTLogger extends GenericLogger {
     @Override
     @SuppressWarnings("unchecked")
     public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {
-        if (level == LogLevel.DEBUG && !Monologue.isDebug()) {
+        if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
             if (published.containsKey(entryName) && topics.containsKey(entryName) && structEntrys.containsKey(entryName)) {
                 ((StructEntry<R>) structEntrys.remove(entryName)).unpublish();
                 NetworkTablesJNI.unpublish(published.remove(entryName));
             }
             return;
-        } else if (level == LogLevel.FILE_IN_COMP && !Monologue.isDebug()) {
+        } else if (level == LogLevel.DEFAULT && Monologue.isFileOnly()) {
             Monologue.dataLogger.putStruct(entryName, struct, value);
             if (published.containsKey(entryName) && topics.containsKey(entryName) && structEntrys.containsKey(entryName)) {
                 ((StructEntry<R>) structEntrys.remove(entryName)).unpublish();

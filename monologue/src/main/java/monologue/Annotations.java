@@ -28,7 +28,7 @@ public class Annotations {
      * The log level to use.
      * @apiNote WPILIB Senders do not obey these levels as of now
      */
-    public LogLevel level() default LogLevel.COMP;
+    public LogLevel level() default LogLevel.DEFAULT;
   }
 
   /**
@@ -52,7 +52,7 @@ public class Annotations {
      * The log level to use.
      * @apiNote WPILIB Senders do not obey these levels as of now
      */
-    public LogLevel level() default LogLevel.COMP;
+    public LogLevel level() default LogLevel.DEFAULT;
   }
 
   /**

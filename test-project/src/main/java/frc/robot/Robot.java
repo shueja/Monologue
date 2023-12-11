@@ -28,9 +28,9 @@ import java.util.List;
 public class Robot extends TimedRobot implements Logged {
   @LogOnceNT private boolean flippingBool = false;
   private int samples = 0;
-  @LogNT(level = DEBUG) int debugSamples = 0;
-  @LogNT(level = FILE_IN_COMP) int lowbandwidthSamples = 0;
-  @LogNT(level = COMP) int compSamples = 0;
+  @LogNT(level = NOT_FILE_ONLY) int debugSamples = 0;
+  @LogNT(level = DEFAULT) int lowbandwidthSamples = 0;
+  @LogNT(level = OVERRIDE_FILE_ONLY) int compSamples = 0;
 
   ArrayList<Internal> internals = new ArrayList<>(List.of(
     new Internal(""),
@@ -56,7 +56,7 @@ public class Robot extends TimedRobot implements Logged {
   @LogNT private Mechanism2d mech = new Mechanism2d(1, 1);
   @LogFile private long[] array = {0, 1, 2};
 
-  BooleanEntry debugEntry = NetworkTableInstance.getDefault().getBooleanTopic("/debug").getEntry(false);
+  BooleanEntry fileOnlyEntry = NetworkTableInstance.getDefault().getBooleanTopic("/debug").getEntry(false);
 
   public Robot() {
     super();
@@ -65,17 +65,17 @@ public class Robot extends TimedRobot implements Logged {
 
   @Override
   public void robotInit() {
-    debugEntry.set(true);
+    fileOnlyEntry.set(false);
   }
 
   @Override
   public void robotPeriodic() {
-    Monologue.setDebug(debugEntry.get());
+    Monologue.setFileOnly(fileOnlyEntry.get());
     Monologue.updateAll();
     field.getRobotObject().setPose(new Pose2d(samples / 100.0, 0, new Rotation2d()));
-    log("stringValue", samples, COMP);
-    log("stringValueDebug", samples, DEBUG);
-    log("structTestDebug", translation2d, DEBUG);
+    log("stringValue", samples, OVERRIDE_FILE_ONLY);
+    log("stringValueDebug", samples, NOT_FILE_ONLY);
+    log("structTestDebug", translation2d, NOT_FILE_ONLY);
     samples++;
     debugSamples++;
     lowbandwidthSamples++;
@@ -91,8 +91,8 @@ public class Robot extends TimedRobot implements Logged {
   @Override
     public void driverStationConnected() {
         //if we are in a match disable debug
-        Monologue.setDebug(
-            DriverStation.getMatchType() == MatchType.None
+        Monologue.setFileOnly(
+            DriverStation.getMatchType() != MatchType.None
         );
     }
 

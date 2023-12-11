@@ -54,9 +54,9 @@ abstract class GenericLogger {
 
     private final Map<LogLevel, ArrayList<LogRunnable>> runnableMap = new HashMap<>(
         Map.of(
-            LogLevel.COMP, new ArrayList<>(),
-            LogLevel.FILE_IN_COMP, new ArrayList<>(),
-            LogLevel.DEBUG, new ArrayList<>()
+            LogLevel.OVERRIDE_FILE_ONLY, new ArrayList<>(),
+            LogLevel.DEFAULT, new ArrayList<>(),
+            LogLevel.NOT_FILE_ONLY, new ArrayList<>()
         )
     );
     protected final Collection<SendableBuilder> sendables = new LinkedHashSet<>();
