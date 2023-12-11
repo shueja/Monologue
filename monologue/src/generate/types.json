@@ -10,7 +10,8 @@
       "ConsumerFunctionPackage": "edu.wpi.first.util.function",
       "FunctionTypePrefix": "Boolean",
       "EntryName": "Boolean",
-      "SupplierGet" : "get"
+      "SupplierGet" : "get",
+      "IsArray" : false
     }
   },
   {
@@ -23,7 +24,8 @@
       "EmptyValue": "0",
       "FunctionTypePrefix": "Integer",
       "EntryName": "Integer",
-      "SupplierGet" : "get"
+      "SupplierGet" : "get",
+      "IsArray" : false
     }
   },
 
@@ -37,7 +39,8 @@
       "EmptyValue": "0",
       "FunctionTypePrefix": "Long",
       "EntryName": "Integer",
-      "SupplierGet" : "get"
+      "SupplierGet" : "get",
+      "IsArray" : false
     }
   },
   {
@@ -52,7 +55,8 @@
       "SupplierFunctionPackage": "edu.wpi.first.util.function",
       "FunctionTypePrefix": "Float",
       "EntryName": "Float",
-      "SupplierGet" : "get"
+      "SupplierGet" : "get",
+      "IsArray" : false
     }
   },
   {
@@ -65,7 +69,8 @@
       "EmptyValue": "0",
       "FunctionTypePrefix": "Double",
       "EntryName": "Double",
-      "SupplierGet" : "get"
+      "SupplierGet" : "get",
+      "IsArray" : false
     }
   },
   {
@@ -78,7 +83,8 @@
       "EmptyValue": "\"\"",
       "FunctionTypeSuffix": "<String>",
       "EntryName": "String",
-      "SupplierGet" : "get"
+      "SupplierGet" : "get",
+      "IsArray" : false
     }
   },
   {
@@ -90,7 +96,8 @@
       "EmptyValue": "new byte[] {}",
       "FunctionTypeSuffix": "<byte[]>",
       "EntryName": "Raw",
-      "SupplierGet" : "get"
+      "SupplierGet" : "get",
+      "IsArray" : true
     }
   },
   {
@@ -103,7 +110,8 @@
       "EmptyValue": "new boolean[] {}",
       "FunctionTypeSuffix": "<boolean[]>",
       "EntryName": "BooleanArray",
-      "SupplierGet" : "get"
+      "SupplierGet" : "get",
+      "IsArray" : true
     }
   },
   {
@@ -116,7 +124,8 @@
       "EmptyValue": "new int[] {}",
       "FunctionTypeSuffix": "<int[]>",
       "EntryName": "IntegerArray",
-      "SupplierGet" : "get"
+      "SupplierGet" : "get",
+      "IsArray" : true
     }
   },
   {
@@ -129,7 +138,8 @@
       "EmptyValue": "new long[] {}",
       "FunctionTypeSuffix": "<long[]>",
       "EntryName": "IntegerArray",
-      "SupplierGet" : "get"
+      "SupplierGet" : "get",
+      "IsArray" : true
     }
   },
   {
@@ -142,7 +152,8 @@
       "EmptyValue": "new float[] {}",
       "FunctionTypeSuffix": "<float[]>",
       "EntryName": "FloatArray",
-      "SupplierGet" : "get"
+      "SupplierGet" : "get",
+      "IsArray" : true
     }
   },
   {
@@ -155,7 +166,8 @@
       "EmptyValue": "new double[] {}",
       "FunctionTypeSuffix": "<double[]>",
       "EntryName": "DoubleArray",
-      "SupplierGet" : "get"
+      "SupplierGet" : "get",
+      "IsArray" : true
     }
   },
   {
@@ -167,7 +179,8 @@
       "EmptyValue": "new String[] {}",
       "FunctionTypeSuffix": "<String[]>",
       "EntryName": "StringArray",
-      "SupplierGet" : "get"
+      "SupplierGet" : "get",
+      "IsArray" : true
     }
   }
 ]

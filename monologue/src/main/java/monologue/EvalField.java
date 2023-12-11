@@ -60,14 +60,14 @@ class EvalField {
     evalFieldAnnotations(field, loggable, rootPath);
   }
 
-  private static Boolean evalNestedLogged(Field field, Logged loggable, String rootPath) {
+  private static boolean evalNestedLogged(Field field, Logged loggable, String rootPath) {
     final Optional<Object> fieldOptional = getField(field, loggable);
 
     if (fieldOptional.isEmpty() || field.isAnnotationPresent(IgnoreLogged.class)) {
       return false;
     }
 
-    Boolean recursed = false;
+    boolean recursed = false;
 
     // if the field is of type Logged
     if (Logged.class.isAssignableFrom(field.getType())) {
@@ -115,7 +115,7 @@ class EvalField {
     return recursed;
   }
 
-  private static Boolean evalFieldAnnotations(Field field, Logged loggable, String rootPath) {
+  private static boolean evalFieldAnnotations(Field field, Logged loggable, String rootPath) {
     LogType logType = EvalAnno.annoEval(field);
 
     if (logType == LogType.None) {
@@ -146,28 +146,26 @@ class EvalField {
             type,
             key,
             logMetadata.once,
-            logMetadata.level
-        );
+            logMetadata.level);
       }
     } else if (logType == LogType.Nt) {
       if (type == DataType.Sendable || type == DataType.NTSendable) {
         Monologue.ntLogger.addSendable(key, (Sendable) getSupplier(field, loggable).get());
       } else {
         Monologue.ntLogger.helper(
-          getSupplier(field, loggable),
-          type,
-          key,
-          logMetadata.once,
-          logMetadata.level
-        );
+            getSupplier(field, loggable),
+            type,
+            key,
+            logMetadata.once,
+            logMetadata.level);
         // if (logMetadata.level == LogLevel.FILE_IN_COMP && !logMetadata.once) {
-        //   Monologue.dataLogger.helper(
-        //     getSupplier(field, loggable),
-        //     type,
-        //     key,
-        //     logMetadata.once,
-        //     logMetadata.level
-        //   );
+        // Monologue.dataLogger.helper(
+        // getSupplier(field, loggable),
+        // type,
+        // key,
+        // logMetadata.once,
+        // logMetadata.level
+        // );
         // }
       }
     }

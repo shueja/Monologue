@@ -16,38 +16,38 @@ public class Monologue {
    * The Monologue library wide FILE_ONLY flag,
    * is used to filter logging behavior
    */
-  private static Boolean FILE_ONLY = true;
+  private static boolean FILE_ONLY = true;
 
-  private static Boolean HAS_SETUP_BEEN_CALLED = false;
+  private static boolean HAS_SETUP_BEEN_CALLED = false;
 
   static final NTLogger ntLogger = new NTLogger();
   static final DataLogger dataLogger = new DataLogger();
   static final WeakHashMap<Logged, String> loggedRegistry = new WeakHashMap<Logged, String>();
 
-
   public static class MonologueConfig {
-    public Boolean fileOnly = true;
-    public Boolean lazyNT = false;
-    public Boolean lazyFile = false;
+    public boolean fileOnly = true;
+    public boolean lazyNT = false;
+    public boolean lazyFile = false;
     public String rootPath = "Robot";
 
-    public MonologueConfig() {}
+    public MonologueConfig() {
+    }
 
     public static MonologueConfig defaultConfig() {
       return new MonologueConfig();
     }
 
-    public MonologueConfig withFileOnly(Boolean fileOnly) {
+    public MonologueConfig withFileOnly(boolean fileOnly) {
       this.fileOnly = fileOnly;
       return this;
     }
 
-    public MonologueConfig withLazyNT(Boolean lazyNT) {
+    public MonologueConfig withLazyNT(boolean lazyNT) {
       this.lazyNT = lazyNT;
       return this;
     }
 
-    public MonologueConfig withLazyFile(Boolean lazyFile) {
+    public MonologueConfig withLazyFile(boolean lazyFile) {
       this.lazyFile = lazyFile;
       return this;
     }
@@ -69,8 +69,9 @@ public class Monologue {
    * @param loggable the root Logged object to log
    * @param config   the configuration for the monologue library
    * 
-   * @apiNote Should only be called once, if another {@link Logged} tree needs to be created
-   *        use {@link #logObj(Logged, String)} for additional trees
+   * @apiNote Should only be called once, if another {@link Logged} tree needs to
+   *          be created
+   *          use {@link #logObj(Logged, String)} for additional trees
    */
   public static void setupMonologue(Logged loggable, MonologueConfig config) {
     if (HAS_SETUP_BEEN_CALLED) {
@@ -94,14 +95,15 @@ public class Monologue {
    * Will also recursively check field values for classes that implement Logged
    * and log those as well.
    * 
-   * @param loggable  the root Logged object to log
-   * @param rootpath  the root path to log to
-   * @param fileOnly  the FILE_ONLY flag for the monologue library
+   * @param loggable the root Logged object to log
+   * @param rootpath the root path to log to
+   * @param fileOnly the FILE_ONLY flag for the monologue library
    * 
-   * @apiNote Should only be called once, if another {@link Logged} tree needs to be created
-   *        use {@link #logObj(Logged, String)} for additional trees
+   * @apiNote Should only be called once, if another {@link Logged} tree needs to
+   *          be created
+   *          use {@link #logObj(Logged, String)} for additional trees
    */
-  public static void setupMonologue(Logged loggable, String rootpath, Boolean fileOnly) {
+  public static void setupMonologue(Logged loggable, String rootpath, boolean fileOnly) {
     setupMonologue(loggable, MonologueConfig.defaultConfig().withRootPath(rootpath).withFileOnly(fileOnly));
   }
 
@@ -109,7 +111,8 @@ public class Monologue {
    * Will interate over every element of the provided {@link Logged} object and
    * handle the data transmission from there.
    * 
-   * Will also recursively check field values for classes that implement {@link Logged}
+   * Will also recursively check field values for classes that implement
+   * {@link Logged}
    * and log those as well.
    * 
    * @param loggable the obj to scrape
@@ -147,8 +150,8 @@ public class Monologue {
 
     Class<?> i = type;
     while (i != null && i != Object.class) {
-        Collections.addAll(result, i.getDeclaredFields());
-        i = i.getSuperclass();
+      Collections.addAll(result, i.getDeclaredFields());
+      i = i.getSuperclass();
     }
 
     return result;
@@ -159,18 +162,18 @@ public class Monologue {
 
     Class<?> i = type;
     while (i != null && i != Object.class) {
-        Collections.addAll(result, i.getDeclaredMethods());
-        i = i.getSuperclass();
+      Collections.addAll(result, i.getDeclaredMethods());
+      i = i.getSuperclass();
     }
 
     return result;
   }
 
-  public static Boolean isFileOnly() {
+  public static boolean isFileOnly() {
     return FILE_ONLY;
   }
 
-  public static void setFileOnly(Boolean fileOnly) {
+  public static void setFileOnly(boolean fileOnly) {
     FILE_ONLY = fileOnly;
     MonologueLog.RuntimeLog("Monologue.setFileOnly() called with " + fileOnly);
   }

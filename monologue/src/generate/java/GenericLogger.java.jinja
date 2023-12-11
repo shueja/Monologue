@@ -120,21 +120,21 @@ abstract class GenericLogger {
         addSendable(path, (Sendable) sendable);
     };
 
-    private Boolean _isLazy = false;
-    public void setLazy(Boolean isLazy) {
+    private boolean _isLazy = false;
+    public void setLazy(boolean isLazy) {
         this._isLazy = isLazy;
     }
-    public Boolean isLazy() {return _isLazy;}
+    public boolean isLazy() {return _isLazy;}
 
-    public Boolean isNT() {return null;}
+    public boolean isNT() {return false;}
 
-    Boolean lastDebugValue = true;
+    boolean lastDebugValue = true;
     public void update(boolean debug) {
         long timestamp = (long) (Timer.getFPGATimestamp() * 1e6);
         for (Map.Entry<LogLevel, ArrayList<LogRunnable>> levelRunnables : runnableMap.entrySet()) {
             if (lastDebugValue != debug) {
-                Boolean wasLoggedBefore = levelRunnables.getKey().shouldLog(lastDebugValue, isNT());
-                Boolean shouldLogNow = levelRunnables.getKey().shouldLog(debug, isNT());
+                boolean wasLoggedBefore = levelRunnables.getKey().shouldLog(lastDebugValue, isNT());
+                boolean shouldLogNow = levelRunnables.getKey().shouldLog(debug, isNT());
                 if (wasLoggedBefore && !shouldLogNow) {
                     levelRunnables.getValue().stream().forEach(
                         (runnable) -> runnable.close()

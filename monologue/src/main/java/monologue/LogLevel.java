@@ -15,7 +15,7 @@ public enum LogLevel {
      */
     OVERRIDE_FILE_ONLY;
 
-    Boolean shouldLog(boolean fileOnly, boolean nt) {
+    boolean shouldLog(boolean fileOnly, boolean nt) {
         switch (this) {
             case OVERRIDE_FILE_ONLY:
                 return true;

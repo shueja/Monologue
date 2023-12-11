@@ -10,6 +10,7 @@ import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.LongConsumer;
@@ -87,7 +88,7 @@ class NTLogger extends GenericLogger {
                 @Override
                 public void accept(long timestamp) {
                     var value = toLongArray(valueSupplier.get());
-                    if (value != lastValue) {
+                    if (!(Arrays.equals(value, lastValue))) {
                         entry.set(value, timestamp);
                         lastValue = value;
                     }
@@ -105,6 +106,27 @@ class NTLogger extends GenericLogger {
             entry::unpublish
         );
 {%else%}
+{%if t.java.IsArray == true%}
+        if (this.isLazy()) {
+            consumer = new LongConsumer() {
+                private {{t.java.ValueType}} lastValue = new {{t.java.ValueType}} {};
+                @Override
+                public void accept(long timestamp) {
+                    var value = valueSupplier.get();
+{%if t.TypeName == 'StringArray'%}
+                    if (!(Arrays.deepEquals(value, lastValue))) {
+{%else%}
+                    if (!(Arrays.equals(value, lastValue))) {
+{%endif%}
+                        entry.set(value, timestamp);
+                        lastValue = value;
+                    }
+                }
+            };
+        } else {
+            consumer = (timestamp) -> entry.set(valueSupplier.get(), timestamp);
+        }
+{%else%}
         if (this.isLazy()) {
             consumer = new LongConsumer() {
                 private {{t.java.ValueType}} lastValue = {{t.java.EmptyValue}};
@@ -120,6 +142,7 @@ class NTLogger extends GenericLogger {
         } else {
             consumer = (timestamp) -> entry.set(valueSupplier.get(), timestamp);
         }
+{%endif%}
 
         addField(
             entryName,
@@ -136,10 +159,29 @@ class NTLogger extends GenericLogger {
     public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier, LogLevel level) {
         var topic = table.getStructTopic(entryName, struct);
         var publisher = topic.publish();
+
+        LongConsumer consumer;
+
+        if (this.isLazy()) {
+            consumer = new LongConsumer() {
+                private R lastValue = null;
+                @Override
+                public void accept(long timestamp) {
+                    var value = valueSupplier.get();
+                    if (!(value.equals(lastValue))) {
+                        publisher.set(value, timestamp);
+                        lastValue = value;
+                    }
+                }
+            };
+        } else {
+            consumer = (timestamp) -> publisher.set(valueSupplier.get(), timestamp);
+        }
+
         addField(
             entryName,
             level,
-            timestamp->publisher.set(valueSupplier.get(), timestamp),
+            consumer,
             ()->publisher.set(valueSupplier.get()),
             ()->NetworkTablesJNI.unpublish(publisher.getHandle())
         );
@@ -222,7 +264,7 @@ class NTLogger extends GenericLogger {
     }
 
     @Override
-    public Boolean isNT() {
+    public boolean isNT() {
         return true;
     }
 }
