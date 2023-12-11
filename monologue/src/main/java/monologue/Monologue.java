@@ -24,69 +24,6 @@ public class Monologue {
   static final DataLogger dataLogger = new DataLogger();
   static final WeakHashMap<Logged, String> loggedRegistry = new WeakHashMap<Logged, String>();
 
-  public static class MonologueConfig {
-    public boolean fileOnly = true;
-    public boolean lazyNT = false;
-    public boolean lazyFile = false;
-    public String rootPath = "Robot";
-
-    public MonologueConfig() {
-    }
-
-    public static MonologueConfig defaultConfig() {
-      return new MonologueConfig();
-    }
-
-    public MonologueConfig withFileOnly(boolean fileOnly) {
-      this.fileOnly = fileOnly;
-      return this;
-    }
-
-    public MonologueConfig withLazyNT(boolean lazyNT) {
-      this.lazyNT = lazyNT;
-      return this;
-    }
-
-    public MonologueConfig withLazyFile(boolean lazyFile) {
-      this.lazyFile = lazyFile;
-      return this;
-    }
-
-    public MonologueConfig withRootPath(String rootPath) {
-      this.rootPath = rootPath;
-      return this;
-    }
-  }
-
-  /**
-   * Is the main entry point for the monologue library.
-   * It will interate over every member of the provided Logged object and
-   * evaluated if it should be logged to the network tables or to a file.
-   * 
-   * Will also recursively check field values for classes that implement Logged
-   * and log those as well.
-   * 
-   * @param loggable the root Logged object to log
-   * @param config   the configuration for the monologue library
-   * 
-   * @apiNote Should only be called once, if another {@link Logged} tree needs to
-   *          be created
-   *          use {@link #logObj(Logged, String)} for additional trees
-   */
-  public static void setupMonologue(Logged loggable, MonologueConfig config) {
-    if (HAS_SETUP_BEEN_CALLED) {
-      throw new IllegalStateException("Monologue.setupMonologue() has already been called");
-    }
-    HAS_SETUP_BEEN_CALLED = true;
-
-    MonologueLog.RuntimeLog("Monologue.setupMonologue() called on " + loggable.getClass().getName());
-    FILE_ONLY = config.fileOnly;
-    ntLogger.setLazy(config.lazyNT);
-    dataLogger.setLazy(config.lazyFile);
-    NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), "", "");
-    logObj(loggable, config.rootPath);
-  }
-
   /**
    * Is the main entry point for the monologue library.
    * It will interate over every member of the provided Logged object and
@@ -98,13 +35,36 @@ public class Monologue {
    * @param loggable the root Logged object to log
    * @param rootpath the root path to log to
    * @param fileOnly the FILE_ONLY flag for the monologue library
+   * @param lazyLogging if true, will only log when the value changes
    * 
    * @apiNote Should only be called once, if another {@link Logged} tree needs to
    *          be created
    *          use {@link #logObj(Logged, String)} for additional trees
    */
-  public static void setupMonologue(Logged loggable, String rootpath, boolean fileOnly) {
-    setupMonologue(loggable, MonologueConfig.defaultConfig().withRootPath(rootpath).withFileOnly(fileOnly));
+  public static void setupMonologue(Logged loggable, String rootpath, boolean fileOnly, boolean lazyLogging) {
+    if (HAS_SETUP_BEEN_CALLED) {
+      throw new IllegalStateException("Monologue.setupMonologue() has already been called");
+    }
+    HAS_SETUP_BEEN_CALLED = true;
+
+    MonologueLog.RuntimeLog(
+      "Monologue.setupMonologue() called on "
+      + loggable.getClass().getName()
+      + " with rootpath "
+      + rootpath
+      + " and fileOnly "
+      + fileOnly
+      + " and lazyLogging "
+      + lazyLogging
+    );
+
+    FILE_ONLY = fileOnly;
+    ntLogger.setLazy(lazyLogging);
+    dataLogger.setLazy(lazyLogging);
+    NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), "", "");
+    logObj(loggable, rootpath);
+
+    MonologueLog.RuntimeLog("Monologue.setupMonologue() finished");
   }
 
   /**
@@ -138,7 +98,9 @@ public class Monologue {
   }
 
   /**
-   * Updates all the loggers, ideally called every cycle
+   * Updates all the loggers, ideally called every cycle.
+   * 
+   * @apiNote Should only be called on the same thread monologue was setup on
    */
   public static void updateAll() {
     ntLogger.update(FILE_ONLY);

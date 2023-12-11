@@ -15,7 +15,7 @@ class EvalMethod {
       try {
         return method.invoke(loggable);
       } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-        DriverStation.reportWarning(method.getName() + " supllier is erroring", false);
+        DriverStation.reportWarning(method.getName() + " supllier is erroring: " + e.toString(), false);
         return null;
       }
     };
@@ -29,7 +29,9 @@ class EvalMethod {
 
     LogType logType = EvalAnno.annoEval(method);
 
-    if (logType == LogType.None) { return; }
+    if (logType == LogType.None) {
+      return;
+    }
 
     method.setAccessible(true);
     if (method.getParameterCount() > 0) {
@@ -43,35 +45,48 @@ class EvalMethod {
     String path = rootPath + "/" + name;
     DataType type;
 
-    try{
+    try {
       type = DataType.fromClass(method.getReturnType());
     } catch (IllegalArgumentException e) {
-      MonologueLog.RuntimeWarn("Tried to log invalid type " + name + " -> " + method.getReturnType() + " in " + rootPath);
+      MonologueLog
+          .RuntimeWarn("Tried to log invalid type " + name + " -> " + method.getReturnType() + " in " + rootPath);
       return;
     }
 
     if (type == DataType.NTSendable || type == DataType.Sendable) {
       MonologueLog.RuntimeWarn("Tried to log invalid type " + name + " -> " + method.getReturnType() + " in " + rootPath
-        + "Sendable isn't supported yet for methods");
+          + ": Sendable isn't supported yet for methods");
       return;
     }
 
     if (logType == LogType.File) {
-      Monologue.dataLogger.helper(
+      Monologue.dataLogger.addSupplier(
           getSupplier(method, loggable),
           type,
           path,
           logMetadata.once,
           logMetadata.level
-        );
+      );
     } else if (logType == LogType.Nt) {
-      Monologue.ntLogger.helper(
+      Monologue.ntLogger.addSupplier(
+          getSupplier(method, loggable),
+          type,
+          path,
+          logMetadata.once,
+          logMetadata.level
+      );
+      if (logMetadata.level == LogLevel.DEFAULT && !logMetadata.once) {
+        // The data *could* need to only go to datalog if its default log level,
+        // register a supplier for dataLogger that can pickup the logging when the nt
+        // one is deactivated by changing the FILE_ONLY flag
+        Monologue.dataLogger.addSupplier(
           getSupplier(method, loggable),
           type,
           path,
           logMetadata.once,
           logMetadata.level
         );
+      }
     }
   }
 }

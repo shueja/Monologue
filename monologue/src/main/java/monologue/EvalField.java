@@ -13,23 +13,13 @@ import monologue.EvalAnno.LogType;
 import monologue.Annotations.IgnoreLogged;
 
 class EvalField {
-  private static boolean isNull(Field field, Object obj) {
-    boolean isNull = true;
-    try {
-      isNull = field.get(obj) == null;
-    } catch (IllegalAccessException e) {
-      e.printStackTrace();
-    }
-    return isNull;
-  }
-
   private static Supplier<?> getSupplier(Field field, Logged loggable) {
     field.setAccessible(true);
     return () -> {
       try {
         return field.get(loggable);
       } catch (IllegalArgumentException | IllegalAccessException e) {
-        DriverStation.reportWarning(field.getName() + " supllier is erroring", false);
+        DriverStation.reportWarning(field.getName() + " supllier is erroring: " + e.toString(), false);
         e.printStackTrace();
         return null;
       }
@@ -47,11 +37,6 @@ class EvalField {
   public static void evalField(Field field, Logged loggable, String rootPath) {
     field.setAccessible(true);
 
-    if (isNull(field, loggable)) {
-      MonologueLog.RuntimeLog(rootPath + "." + field.getName() + " is null");
-      return;
-    }
-
     if (evalNestedLogged(field, loggable, rootPath)) {
       MonologueLog.RuntimeLog(rootPath + "." + field.getName() + " was logged recursively");
       return;
@@ -64,6 +49,7 @@ class EvalField {
     final Optional<Object> fieldOptional = getField(field, loggable);
 
     if (fieldOptional.isEmpty() || field.isAnnotationPresent(IgnoreLogged.class)) {
+      MonologueLog.RuntimeLog(rootPath + "." + field.getName() + " is null or ignored");
       return false;
     }
 
@@ -124,6 +110,10 @@ class EvalField {
 
     LogMetadata logMetadata = EvalAnno.LogMetadata.from(field);
 
+    if (logMetadata.once && getField(field, loggable).isEmpty()) {
+      MonologueLog.RuntimeWarn(rootPath + "." + field.getName() + " is null at setup");
+    }
+
     String name = logMetadata.relativePath.equals("") ? field.getName() : logMetadata.relativePath;
     String key = rootPath + "/" + name;
     DataType type;
@@ -137,36 +127,41 @@ class EvalField {
 
     if (logType == LogType.File) {
       if (type == DataType.NTSendable) {
-        Monologue.dataLogger.addSendable(key, (NTSendable) getSupplier(field, loggable).get());
+        Monologue.dataLogger.addSendable(key, (NTSendable) getField(field, loggable).get());
       } else if (type == DataType.Sendable) {
-        Monologue.dataLogger.addSendable(key, (Sendable) getSupplier(field, loggable).get());
+        Monologue.dataLogger.addSendable(key, (Sendable) getField(field, loggable).get());
       } else {
-        Monologue.dataLogger.helper(
+        Monologue.dataLogger.addSupplier(
             getSupplier(field, loggable),
             type,
             key,
             logMetadata.once,
-            logMetadata.level);
+            logMetadata.level
+        );
       }
     } else if (logType == LogType.Nt) {
       if (type == DataType.Sendable || type == DataType.NTSendable) {
-        Monologue.ntLogger.addSendable(key, (Sendable) getSupplier(field, loggable).get());
+        Monologue.ntLogger.addSendable(key, (Sendable) getField(field, loggable).get());
       } else {
-        Monologue.ntLogger.helper(
+        Monologue.ntLogger.addSupplier(
             getSupplier(field, loggable),
             type,
             key,
             logMetadata.once,
-            logMetadata.level);
-        // if (logMetadata.level == LogLevel.FILE_IN_COMP && !logMetadata.once) {
-        // Monologue.dataLogger.helper(
-        // getSupplier(field, loggable),
-        // type,
-        // key,
-        // logMetadata.once,
-        // logMetadata.level
-        // );
-        // }
+            logMetadata.level
+        );
+        if (logMetadata.level == LogLevel.DEFAULT && !logMetadata.once) {
+          // The data *could* need to only go to datalog if its default log level,
+          // register a supplier for dataLogger that can pickup the logging when the nt
+          // one is deactivated by changing the FILE_ONLY flag
+          Monologue.dataLogger.addSupplier(
+            getSupplier(field, loggable),
+            type,
+            key,
+            logMetadata.once,
+            logMetadata.level
+          );
+        }
       }
     }
     return true;

@@ -11,7 +11,7 @@ public enum LogLevel {
      */
     DEFAULT,
     /**
-     * Always on with same behavior independent of <code>FILE_ONLY</code> flag
+     * Always logs with same behavior independent of <code>FILE_ONLY</code> flag
      */
     OVERRIDE_FILE_ONLY;
 
