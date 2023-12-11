@@ -235,7 +235,7 @@ class NTLogger extends GenericLogger {
         sendables.add(builder);
     }
 
-    public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot, LogLevel level) {
+    public void addSupplier(Supplier<?> supplier, DataType type, String path, boolean oneShot, LogLevel level) {
         switch (type) {
 {%for t in types%}
             case {{t.TypeName}}:

@@ -56,11 +56,11 @@ public class Robot extends TimedRobot implements Logged {
   @LogNT private Mechanism2d mech = new Mechanism2d(1, 1);
   @LogFile private long[] array = {0, 1, 2};
 
-  BooleanEntry fileOnlyEntry = NetworkTableInstance.getDefault().getBooleanTopic("/debug").getEntry(false);
+  BooleanEntry fileOnlyEntry = NetworkTableInstance.getDefault().getBooleanTopic("/fileOnly").getEntry(false);
 
   public Robot() {
     super();
-    Monologue.setupMonologue(this, "/Robot", true);
+    Monologue.setupMonologue(this, "/Robot", true, true);
   }
 
   @Override
