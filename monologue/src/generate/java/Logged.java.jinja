@@ -1,6 +1,8 @@
 package monologue;
 
-{%for t in geomTypes%} import edu.wpi.first.math.geometry.{{t.TypeName}}; {%endfor%}
+{%for t in geomTypes%}
+import edu.wpi.first.math.geometry.{{t.TypeName}};
+{%endfor%}
 
 public interface Logged {
   public default String getPath() {
@@ -9,16 +11,21 @@ public interface Logged {
   public default String getFullPath() {
     return Monologue.loggedRegistry.getOrDefault(this, "notfound");
   }
-  {%for t in types%}
-  public default void put(String key, {{t.java.ValueType}} value) {
-    Monologue.dataLogger.put(getFullPath() + "/" + key, value);
+{%for t in types%}
+  public default void log(String key, {{t.java.ValueType}} value) {
     Monologue.ntLogger.put(getFullPath() + "/" + key, value);
   }
-  {%endfor%}
-  {%for t in geomTypes%}
-  public default void put(String key, {{t.TypeName}} value) {
-    Monologue.dataLogger.put(getFullPath() + "/" + key, value);
+  public default void log(String key, {{t.java.ValueType}} value, LogLevel level) {
+    Monologue.ntLogger.put(getFullPath() + "/" + key, value, level);
+  }
+{%endfor%}
+  //Geometry types
+{%for t in geomTypes%}
+  public default void log(String key, {{t.TypeName}} value) {
     Monologue.ntLogger.put(getFullPath() + "/" + key, value);
   }
-  {%endfor%}
+  public default void log(String key, {{t.TypeName}} value, LogLevel level) {
+    Monologue.ntLogger.put(getFullPath() + "/" + key, value, level);
+  }
+{%endfor%}
 }

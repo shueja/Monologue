@@ -93,7 +93,10 @@ task monologueGenerateClasses() {
         monologueJavaTypesOutputDir.deleteDir()
         monologueJavaTypesOutputDir.mkdirs()
 
-        def config = new JinjavaConfig()
+        def builder = JinjavaConfig.newBuilder()
+        builder.withTrimBlocks(true)
+        builder.withLstripBlocks(true)
+        def config = builder.build()
         def jinjava = new Jinjava(config)
 
         monologueJavaTypesInputDir.listFiles().each { File file ->

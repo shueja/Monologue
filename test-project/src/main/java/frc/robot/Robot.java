@@ -4,105 +4,97 @@
 
 package frc.robot;
 
-import monologue.Monologue;
-import monologue.Monologue.LogBoth;
-import monologue.Monologue.LogFile;
-import monologue.Monologue.LogNT;
 import monologue.Logged;
-import edu.wpi.first.math.filter.LinearFilter;
+import monologue.Monologue;
+import monologue.Annotations.*;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.networktables.BooleanEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.MatchType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.Logger;
+import frc.robot.inheritance.Child;
+
+import static monologue.LogLevel.*;
+
 import java.util.ArrayList;
+import java.util.List;
 
-/**
- * The VM is configured to automatically run this class, and to call the functions corresponding to
- * each mode, as described in the TimedRobot documentation. If you change the name of this class or
- * the package after creating this project, you must also update the build.gradle file in the
- * project.
- */
-public class Robot extends TimedRobot implements Logged, Loggable {
-  @LogBoth(once=true) private int samples = 0;
-  boolean useOblog = false;
-  boolean dataLog = false;
 
-  ArrayList<Internal> m_internals = new ArrayList<>();
-  private LinearFilter filter = LinearFilter.movingAverage(50);
+public class Robot extends TimedRobot implements Logged {
+  @LogOnceNT private boolean flippingBool = false;
+  private int samples = 0;
+  @LogNT(level = NOT_FILE_ONLY) int debugSamples = 0;
+  @LogNT(level = DEFAULT) int lowbandwidthSamples = 0;
+  @LogNT(level = OVERRIDE_FILE_ONLY) int compSamples = 0;
+
+  ArrayList<Internal> internals = new ArrayList<>(List.of(
+    new Internal(""),
+    new Internal(""),
+    new Internal("")
+  ));
   double totalOfAvgs = 0;
   double avgsTaken = 0;
 
-  private Geometry m_geometry = new Geometry();
+  @SuppressWarnings("unused")
+  private Geometry geometry = new Geometry();
 
-  @LogNT @LogFile private Field2d field = new Field2d();
+  @IgnoreLogged
+  private Geometry geometryIgnored = new Geometry();
 
-  @LogBoth private Mechanism2d mech = new Mechanism2d(1, 1);
-  @LogBoth private long[] array = {0, 1, 2};
+  @SuppressWarnings("unused")
+  private Child child = new Child();
 
-  /**
-   * This function is run when the robot is first started up and should be used for any
-   * initialization code.
-   */
+  private Translation2d translation2d = new Translation2d(1.0, 2.0);
+
+  @LogNT private Field2d field = new Field2d();
+
+  @LogNT private Mechanism2d mech = new Mechanism2d(1, 1);
+  @LogFile private long[] array = {0, 1, 2};
+
+  BooleanEntry fileOnlyEntry = NetworkTableInstance.getDefault().getBooleanTopic("/fileOnly").getEntry(false);
+
+  public Robot() {
+    super();
+    Monologue.setupMonologue(this, "/Robot", true, true);
+  }
+
   @Override
   public void robotInit() {
-    SmartDashboard.putBoolean("bool", true);
-    Monologue.dataLogger.addNetworkTable(
-        NetworkTableInstance.getDefault().getTable("SmartDashboard"));
-    // for (int i = 0; i < 100; i++) {
-    //   m_internals.add(new Internal(i + ""));
-    // }
-    // DataLogManager.start();
-    NetworkTableInstance.getDefault().getTopic("name").getGenericEntry();
-    if (useOblog) {
-      Logger.configureLoggingAndConfig(this, false);
-    } else {
-      Monologue.setupLogging(this, "/Robot", true);
-    }
-    put("imperative", new Transform2d());
+    fileOnlyEntry.set(false);
   }
 
-  @LogBoth
-  public String getStringPath()
-  {
-    return getFullPath();
-  }
   @Override
   public void robotPeriodic() {
-    var timeBefore = Timer.getFPGATimestamp() * 1e6;
-    if (useOblog) {
-      Logger.updateEntries();
-    } else {
-      if (true) {
-        Monologue.updateDataLog();
-        Monologue.updateNT();
-      } else {
-        Monologue.updateNT();
-      }
-    }
-    var timeAfter = Timer.getFPGATimestamp() * 1e6;
-    samples++;
-    double avg = filter.calculate(timeAfter - timeBefore);
-    if (samples % 500 == 0 && samples < (500 * 8) + 50) {
-      System.out.println(avg);
-      totalOfAvgs += avg;
-      avgsTaken++;
-    }
-    if (samples == 500 * 8) {
-      System.out.println("Final Result: Oblog:" + useOblog + " DataLog:" + dataLog);
-      System.out.println(totalOfAvgs / avgsTaken);
-    }
+    Monologue.setFileOnly(fileOnlyEntry.get());
+    Monologue.updateAll();
     field.getRobotObject().setPose(new Pose2d(samples / 100.0, 0, new Rotation2d()));
-    // m_internals.forEach(Internal::update);
-    put("stringValue", samples + "");
-    SmartDashboard.putBoolean(getPath(), dataLog);
+    log("stringValue", samples, OVERRIDE_FILE_ONLY);
+    log("stringValueDebug", samples, NOT_FILE_ONLY);
+    log("structTestDebug", translation2d, NOT_FILE_ONLY);
+    samples++;
+    debugSamples++;
+    lowbandwidthSamples++;
+    compSamples++;
+    flippingBool = !flippingBool;
+    Internal.staticBool = !Internal.staticBool;
+    translation2d = new Translation2d(
+      (Math.random()+0.55) * translation2d.getX(),
+      (Math.random()+0.55) * translation2d.getY()
+    );
   }
+
+  @Override
+    public void driverStationConnected() {
+        //if we are in a match disable debug
+        Monologue.setFileOnly(
+            DriverStation.getMatchType() != MatchType.None
+        );
+    }
 
   @Override
   public void autonomousInit() {}
@@ -136,7 +128,11 @@ public class Robot extends TimedRobot implements Logged, Loggable {
 
   @Override
   public String getPath() {
-    // TODO Auto-generated method stub
     return "Robot";
+  }
+
+  @LogNT
+  public String getStringPath() {
+    return getFullPath();
   }
 }

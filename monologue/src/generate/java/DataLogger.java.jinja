@@ -4,71 +4,116 @@ package monologue;
 {%for t in geomTypes%}
 import edu.wpi.first.math.geometry.{{t.TypeName}};
 {%endfor%}
-import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
 import edu.wpi.first.util.datalog.*;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.DataLogManager;
-import monologue.DataLogSendableBuilder;
+import java.util.Arrays;
 import java.util.function.Supplier;
-import monologue.util.GeomPacker;
-import java.util.function.*;
-import edu.wpi.first.util.function.FloatSupplier;
+import java.util.function.LongConsumer;
 import edu.wpi.first.util.struct.Struct;
 
-public class DataLogger extends GenericLogger {
-    public DataLogger(){super();
+class DataLogger extends GenericLogger {
+    private DataLog log = DataLogManager.getLog();
+
+    public DataLogger(){
+        super();
         DataLogManager.logNetworkTables(false);
-        log = DataLogManager.getLog();
     };
-    private DataLog log;
 
     {%for t in types%}
-    public void put(String entryName, {{t.java.ValueType}} value) {
-        {%if t.TypeName == 'IntegerArray'%}
-            long[] array = new long[value.length];
-            for (int i = 0; i < value.length; i++) {
-                array[i] = (long) value[i];
-            }
-            new {{t.java.EntryName}}LogEntry(log, entryName).append(array);
-            {%else%}
-            new {{t.java.EntryName}}LogEntry(log, entryName).append(value);
-            {%endif%}
-    }
-
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, int level) {
-        var entry = new {{t.java.EntryName}}LogEntry(log, entryName);
-            {%if t.TypeName == 'IntegerArray'%}
-            map.put(entryName, field((timestamp)->{
-                int[] value = valueSupplier.get();
-                long[] array = new long[value.length];
-                for (int i = 0; i < value.length; i++) {
-                    array[i] = (long) value[i];
-                }
-                entry.append(array, timestamp);
-            }, ()->{}, level));
-            {%else%}
-            map.put(entryName, field((timestamp)->entry.append(valueSupplier.get(), timestamp), ()->{}, level));
-        {%endif%}
-    }
     @Override
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
-        add{{t.TypeName}}(entryName, valueSupplier, 0);
-    }
-    {%endfor%}
+    public void put(String entryName, {{t.java.ValueType}} value, LogLevel level) {
+        if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
+            return;
+        }
 
-    public void addNetworkTable(NetworkTable table) {
-        NetworkTableInstance.getDefault()
-            .startEntryDataLog(log, table.getPath(), table.getPath());
-    }
-
-    public void addNetworkTable(NetworkTable table, String dlPath) {
-        NetworkTableInstance.getDefault()
-            .startEntryDataLog(log, table.getPath(), dlPath);
+{%if t.TypeName == 'IntegerArray'%}
+        new {{t.java.EntryName}}LogEntry(log, entryName)
+            .append(toLongArray(value));
+{%else%}
+        new {{t.java.EntryName}}LogEntry(log, entryName).append(value);
+{%endif%}
     }
 
+    @Override
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, LogLevel level) {
+        var entry = new {{t.java.EntryName}}LogEntry(log, entryName);
+
+        LongConsumer consumer;
+{%if t.TypeName == 'IntegerArray'%}
+        if (this.isLazy()) {
+            consumer = new LongConsumer() {
+                private long[] lastValue = new long[] {};
+                @Override
+                public void accept(long timestamp) {
+                    var value = toLongArray(valueSupplier.get());
+                    if (!(Arrays.equals(value, lastValue))) {
+                        entry.append(value, timestamp);
+                        lastValue = value;
+                    }
+                }
+            };
+        } else {
+            consumer = (timestamp) -> entry.append(toLongArray(valueSupplier.get()), timestamp);
+        }
+
+        addField(
+            entryName,
+            level,
+            consumer
+        );
+{%else%}
+{%if t.java.IsArray == true%}
+        if (this.isLazy()) {
+            consumer = new LongConsumer() {
+                private {{t.java.ValueType}} lastValue = new {{t.java.ValueType}} {};
+                @Override
+                public void accept(long timestamp) {
+                    var value = valueSupplier.get();
+{%if t.TypeName == 'StringArray'%}
+                    if (!(Arrays.deepEquals(value, lastValue))) {
+{%else%}
+                    if (!(Arrays.equals(value, lastValue))) {
+    {%endif%}
+                        entry.append(value, timestamp);
+                        lastValue = value;
+                    }
+                }
+            };
+        } else {
+            consumer = (timestamp) -> entry.append(valueSupplier.get(), timestamp);
+        }
+{%else%}
+        if (this.isLazy()) {
+            consumer = new LongConsumer() {
+                private {{t.java.ValueType}} lastValue = {{t.java.EmptyValue}};
+                @Override
+                public void accept(long timestamp) {
+                    var value = valueSupplier.get();
+                    if (value != lastValue) {
+                        entry.append(value, timestamp);
+                        lastValue = value;
+                    }
+                }
+            };
+        } else {
+            consumer = (timestamp) -> entry.append(valueSupplier.get(), timestamp);
+        }
+{%endif%}
+
+        addField(
+            entryName,
+            level,
+            consumer
+        );
+{%endif%}
+    }
+{%endfor%}
+
+    @Override
     public void addSendable(String path, Sendable sendable) {    
         System.out.println("logging regular sendable at " + path);    
         var builder = new DataLogSendableBuilder(path);
@@ -76,6 +121,7 @@ public class DataLogger extends GenericLogger {
         sendables.add(builder);
     }
 
+    @Override
     public void addSendable(String path, NTSendable sendable) {
         System.out.println("logging ntsendable at " + path);
         var table = NetworkTableInstance.getDefault().getTable(path);
@@ -85,29 +131,53 @@ public class DataLogger extends GenericLogger {
         builder.startListeners();
         table.getEntry(".controllable").setBoolean(false);
         sendables.add(builder);
-        addNetworkTable(table, path);
+        NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), path, path);
     }
 
-    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier, int level) {
+    @Override
+    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier, LogLevel level) {
         var entry = StructLogEntry.create(log, entryName, struct);
-        map.put(entryName, field((timestamp->entry.append(valueSupplier.get(), timestamp)), ()->{}, level));
+
+        LongConsumer consumer;
+
+        if (this.isLazy()) {
+            consumer = new LongConsumer() {
+                private R lastValue = null;
+                @Override
+                public void accept(long timestamp) {
+                    var value = valueSupplier.get();
+                    if (!(value.equals(lastValue))) {
+                        entry.append(value, timestamp);
+                        lastValue = value;
+                    }
+                }
+            };
+        } else {
+            consumer = (timestamp) -> entry.append(valueSupplier.get(), timestamp);
+        }
+
+        addField(
+            entryName,
+            level,
+            consumer
+        );
     }
 
-    public <R> void putStruct(String entryName, Struct<R> struct, R value) {
+    @Override
+    public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {
+        if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
+            return;
+        }
+
         StructLogEntry.create(log, entryName, struct).append(value);
     }
 
-    public void startLog() {
-        log = DataLogManager.getLog();
-    }
-
-    public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot, int level) {
+    public void addSupplier(Supplier<?> supplier, DataType type, String path, boolean oneShot, LogLevel level) {
         switch (type) {
-            {%for t in types%}
-               
+        {%for t in types%}
             case {{t.TypeName}}:
                 if (oneShot) {
-                    put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}());
+                    put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
                 } else {
                     add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
                 }
@@ -116,17 +186,25 @@ public class DataLogger extends GenericLogger {
             case Sendable:
                 addSendable(path, (Sendable) supplier.get());
                 break;
-            {%for t in geomTypes%}
+            case NTSendable:
+                addSendable(path, (Sendable) supplier.get());
+                break;
+        {%for t in geomTypes%}
             case {{t.TypeName}}:
                 if (oneShot) {
-                    put(path, ({{t.TypeName}}) supplier.get());
+                    put(path, ({{t.TypeName}}) supplier.get(), level);
                 } else {
                     add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get(), level);
                 }
                 break;
-            {%endfor%}
+        {%endfor%}
             default:
                 throw new IllegalArgumentException("Invalid data type");
         }
+    }
+
+    @Override
+    public boolean isNT() {
+        return false;
     }
 }

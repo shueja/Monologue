@@ -4,103 +4,97 @@ package monologue;
 import edu.wpi.first.math.geometry.{{t.TypeName}};
 {%endfor%}
 import edu.wpi.first.networktables.NTSendable;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.util.datalog.*;
-import edu.wpi.first.networktables.*;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import java.util.function.*;
-import edu.wpi.first.util.function.FloatSupplier;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.Timer;
-import monologue.util.GeomPacker;
 
-public abstract class GenericLogger {
+abstract class GenericLogger {
     public interface LogRunnable extends LongConsumer {
+        String key();
         void close();
+        void open();
     }
     protected GenericLogger() {}
 
-    protected int logLevel;
-
-    protected LogRunnable field(LongConsumer run, Runnable close) {
-        return new LogRunnable() {
+    protected void addField(String key, LogLevel level, LongConsumer run, Runnable open, Runnable close) {
+        var runnable =  new LogRunnable() {
+            @Override
+            public String key() {
+                return key;
+            }
             @Override
             public void accept(long timestamp) {
                 run.accept(timestamp);
             }
             @Override
+            public void open() {
+                open.run();
+            }
+            @Override
             public void close() {
                 close.run();
             }
         };
+        runnableMap.get(level).add(runnable);
     }
 
-    protected LogRunnable field(LongConsumer run, Runnable close, int level) {
-        IntSupplier logLevelSupplier = this::getLevel;
-        return new LogRunnable() {
-            @Override
-            public void accept(long timestamp) {
-                if (logLevelSupplier.getAsInt() <= level) {
-                    run.accept(timestamp);
-                }
-            }
-            @Override
-            public void close() {
-                close.run();
-            }
-        };
+    protected void addField(String key, LogLevel level, LongConsumer run) {
+        addField(key, level, run, ()->{}, ()->{});
     }
-    protected final Map<String, LogRunnable> map = new HashMap<>();
+
+    private final Map<LogLevel, ArrayList<LogRunnable>> runnableMap = new HashMap<>(
+        Map.of(
+            LogLevel.OVERRIDE_FILE_ONLY, new ArrayList<>(),
+            LogLevel.DEFAULT, new ArrayList<>(),
+            LogLevel.NOT_FILE_ONLY, new ArrayList<>()
+        )
+    );
     protected final Collection<SendableBuilder> sendables = new LinkedHashSet<>();
 
-    {%for t in types%}
-    public void put(String entryName, {{t.java.ValueType}} value) {}
+{%for t in types%}
+    public void put(String entryName, {{t.java.ValueType}} value) {
+        put(entryName, value, LogLevel.DEFAULT);
+    }
+    public void put(String entryName, {{t.java.ValueType}} value, LogLevel level) {}
 
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, int level) {}
-
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, LogLevel level) {}
     public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
-        add{{t.TypeName}}(entryName, valueSupplier, 0);
+        add{{t.TypeName}}(entryName, valueSupplier, LogLevel.DEFAULT);
     }
-    {%endfor%}
+{%endfor%}
 
-    {%for t in geomTypes%}
+{%for t in geomTypes%}
     public void put(String entryName, {{t.TypeName}} value) {
-        putStruct(entryName, {{t.TypeName}}.struct, value);
+        put(entryName, value, LogLevel.DEFAULT);
     }
-    public void add{{t.TypeName}}(String entryName, Supplier<{{t.TypeName}}> valueSupplier, int level) {
+    public void put(String entryName, {{t.TypeName}} value, LogLevel level) {
+        putStruct(entryName, {{t.TypeName}}.struct, value, level);
+    }
+    public void add{{t.TypeName}}(String entryName, Supplier<{{t.TypeName}}> valueSupplier, LogLevel level) {
         addStruct(entryName, {{t.TypeName}}.struct, valueSupplier, level);
     }
     public void add{{t.TypeName}}(String entryName, Supplier<{{t.TypeName}}> valueSupplier) {
-        add{{t.TypeName}}(entryName, valueSupplier, 0);
+        add{{t.TypeName}}(entryName, valueSupplier, LogLevel.DEFAULT);
     }
-    {%endfor%}
+{%endfor%}
 
-    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<?extends R> valueSupplier, int level) {}
-    public <R> void putStruct(String entryName, Struct<R> struct, R value) {}
+    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<?extends R> valueSupplier, LogLevel level) {}
+    public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {}
+    public <R> void putStruct(String entryName, Struct<R> struct, R value) {
+        putStruct(entryName, struct, value, LogLevel.DEFAULT);
+    }
 
-    // public void put(String entryName, Translation2d value) {
-    //     var topic = table.getDoubleArrayTopic(entryName);
-    //     topic.setRetained(true);
-    //     var publisher = new Translation2dPublisher(topic);
-    //     publisher.set(value);
-    //     publisher.close();
-    // }
-
-    public void addNetworkTable(NetworkTable table) {};
-
-    public void addNetworkTable(NetworkTable table, String dlPath) {};
+    public void addSendable(String path, Sendable sendable) {};
 
     public void addSendable(String pathPrefix, String name, Sendable sendable) {
         String prefix;
@@ -112,8 +106,6 @@ public abstract class GenericLogger {
         addSendable(prefix, sendable);
     }
 
-    public void addSendable(String path, Sendable sendable) {};
-
     public void addSendable(String pathPrefix, String name, NTSendable sendable) {
         String prefix;
         if (!pathPrefix.endsWith("/")) {
@@ -121,27 +113,54 @@ public abstract class GenericLogger {
         } else {
             prefix = pathPrefix + name + "/";
         }
-        addSendable(prefix, sendable);
+        addSendable(prefix, (Sendable) sendable);
     }
 
     public void addSendable(String path, NTSendable sendable) {
         addSendable(path, (Sendable) sendable);
     };
 
-    public void setLevel(int level) {
-        logLevel = level;
+    private boolean _isLazy = false;
+    public void setLazy(boolean isLazy) {
+        this._isLazy = isLazy;
     }
+    public boolean isLazy() {return _isLazy;}
 
-    public int getLevel() {
-        return logLevel;
-    }
-    public void update() {
+    public boolean isNT() {return false;}
+
+    boolean lastDebugValue = true;
+    public void update(boolean debug) {
         long timestamp = (long) (Timer.getFPGATimestamp() * 1e6);
-        for (Map.Entry<String, LogRunnable> entry : map.entrySet()) {
-            var key = entry.getKey();
-            var val = entry.getValue();
-            val.accept(timestamp);
+        for (Map.Entry<LogLevel, ArrayList<LogRunnable>> levelRunnables : runnableMap.entrySet()) {
+            if (lastDebugValue != debug) {
+                boolean wasLoggedBefore = levelRunnables.getKey().shouldLog(lastDebugValue, isNT());
+                boolean shouldLogNow = levelRunnables.getKey().shouldLog(debug, isNT());
+                if (wasLoggedBefore && !shouldLogNow) {
+                    levelRunnables.getValue().stream().forEach(
+                        (runnable) -> runnable.close()
+                    );
+                }
+                if (!wasLoggedBefore && shouldLogNow) {
+                    levelRunnables.getValue().stream().forEach(
+                        (runnable) -> runnable.open()
+                    );
+                }
+            }
+            if (levelRunnables.getKey().shouldLog(debug, isNT())) {
+                levelRunnables.getValue().stream().forEach(
+                    (runnable) -> runnable.accept(timestamp)
+                );
+            }
         }
         sendables.forEach(SendableBuilder::update);
+        lastDebugValue = debug;
+    }
+
+    public static long[] toLongArray(int[] arr) {
+        long[] newArr = new long[arr.length];
+        for (int i = 0; i < arr.length; i++) {
+            newArr[i] = (long) arr[i];
+        }
+        return newArr;
     }
 }
