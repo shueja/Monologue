@@ -72,9 +72,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
     
     implementation "com.github.Oblarg:Oblog:5.1.0"
-    //add ../monologue
-    // implementation files('../monologue/build/libs/monologue.jar')
-    implementation files('../monologue/build/libs/monologue.jar')
+    implementation 'com.github.shueja:Monologue:v1.0.0-alpha2'
 }
 
 repositories {

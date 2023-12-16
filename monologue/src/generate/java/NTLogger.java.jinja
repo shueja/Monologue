@@ -4,228 +4,129 @@ package monologue;
 {%for t in geomTypes%}
 import edu.wpi.first.math.geometry.{{t.TypeName}};
 {%endfor%}
+import edu.wpi.first.networktables.NTSendable;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.util.datalog.*;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import java.util.function.*;
+import edu.wpi.first.util.function.FloatSupplier;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.function.LongConsumer;
 import java.util.function.Supplier;
 
-class NTLogger extends GenericLogger {
+import edu.wpi.first.wpilibj.Timer;
+
+public class NTLogger extends GenericLogger {
     public NTLogger() {super();}
 
     private final NetworkTableInstance table = NetworkTableInstance.getDefault();
 
-    private final Map<String, Integer> published = new HashMap<>();
-    private final Map<String, Topic> topics = new HashMap<>();
-    private final Map<String, StructEntry<?>> structEntrys = new HashMap<>();
+    private final Map<String, Publisher> publishers = new HashMap<String, Publisher>();
 
     {%for t in types%}
-    @Override
-    public void put(String entryName, {{t.java.ValueType}} value, LogLevel level) {
-        if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
-            if (published.containsKey(entryName) && topics.containsKey(entryName)) {
-                NetworkTablesJNI.unpublish(
-                    published.remove(entryName)
-                );
-            }
-            return;
-        } else if (level == LogLevel.DEFAULT && Monologue.isFileOnly()) {
-            Monologue.dataLogger.put(entryName, value, level);
-            if (published.containsKey(entryName) && topics.containsKey(entryName)) {
-                NetworkTablesJNI.unpublish(
-                    published.remove(entryName)
-                );
-            }
-            return;
-        }
-
-        if (!topics.containsKey(entryName)) {
+    public void put(String entryName, {{t.java.ValueType}} value) {
+        var genericPublisher = publishers.get(entryName);
+        {{t.java.EntryName}}Publisher publisher = null;
+        if (genericPublisher == null){
             var topic = table.get{{t.java.EntryName}}Topic(entryName);
-{%if t.TypeName == 'Raw'%}
-            var publisher = topic.publish("raw");
-{%else%}
-            var publisher = topic.publish();
-{%endif%}
-            published.put(entryName, publisher.getHandle());
-            topics.put(entryName, topic);
+            {%if t.TypeName == 'Raw'%}
+            publisher = topic.publish("raw");
+            {%else%}
+            publisher = topic.publish();{%endif%}
+            publishers.put(entryName, publisher);
+        } else if (genericPublisher instanceof {{t.java.EntryName}}Publisher) {
+            publisher = ({{t.java.EntryName}}Publisher) genericPublisher;
         }
-
-        if (!published.containsKey(entryName)) {
-{%if t.TypeName == 'Raw'%}
-            published.put(entryName, (({{t.java.EntryName}}Topic) topics.get(entryName)).publish("raw").getHandle());
-{%else%}
-            published.put(entryName, (({{t.java.EntryName}}Topic) topics.get(entryName)).publish().getHandle());
-{%endif%}
+        if (publisher != null) {
+            {%if t.TypeName == 'IntegerArray'%}
+            long[] array = new long[value.length];
+            for (int i = 0; i < value.length; i++) {
+                array[i] = (long) value[i];
+            }
+            publisher.set(array);
+            {%else%}
+            publisher.set(value);
+            {%endif%}
         }
-{%if t.TypeName == 'IntegerArray'%}
-        NetworkTablesJNI.set{{t.java.EntryName}}(published.get(entryName), 0, toLongArray(value));
-{%else%}
-        NetworkTablesJNI.set{{t.java.EntryName}}(published.get(entryName), 0, value);
-{%endif%}
     }
 
-    @Override
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, LogLevel level) {
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, int level) {
         var topic = table.get{{t.java.EntryName}}Topic(entryName);
-{%if t.TypeName == 'Raw'%}
-        var entry = topic.getEntry("raw", {{t.java.EmptyValue}});
-{%elif t.TypeName == 'IntegerArray'%}
-        var entry = topic.getEntry(new long[] {});
-{%else%}
-        var entry = topic.getEntry({{t.java.EmptyValue}});
-{%endif%}
-        LongConsumer consumer;
-{%if t.TypeName == 'IntegerArray'%}
-        if (this.isLazy()) {
-            consumer = new LongConsumer() {
-                private long[] lastValue = new long[] {};
-                @Override
-                public void accept(long timestamp) {
-                    var value = toLongArray(valueSupplier.get());
-                    if (!(Arrays.equals(value, lastValue))) {
-                        entry.set(value, timestamp);
-                        lastValue = value;
-                    }
+        {%if t.TypeName == 'Raw'%}
+        var publisher = topic.publish("raw");
+        {%else%}
+        var publisher = topic.publish();
+        {%endif%}
+            {%if t.TypeName == 'IntegerArray'%}
+            map.put(entryName, field((timestamp)->{
+                int[] value = valueSupplier.get();
+                long[] array = new long[value.length];
+                for (int i = 0; i < value.length; i++) {
+                    array[i] = (long) value[i];
                 }
-            };
-        } else {
-            consumer = (timestamp) -> entry.set(toLongArray(valueSupplier.get()), timestamp);
-        }
-
-        addField(
-            entryName,
-            level,
-            consumer,
-            () -> entry.set(toLongArray(valueSupplier.get())),
-            entry::unpublish
-        );
-{%else%}
-{%if t.java.IsArray == true%}
-        if (this.isLazy()) {
-            consumer = new LongConsumer() {
-                private {{t.java.ValueType}} lastValue = new {{t.java.ValueType}} {};
-                @Override
-                public void accept(long timestamp) {
-                    var value = valueSupplier.get();
-{%if t.TypeName == 'StringArray'%}
-                    if (!(Arrays.deepEquals(value, lastValue))) {
-{%else%}
-                    if (!(Arrays.equals(value, lastValue))) {
-{%endif%}
-                        entry.set(value, timestamp);
-                        lastValue = value;
-                    }
-                }
-            };
-        } else {
-            consumer = (timestamp) -> entry.set(valueSupplier.get(), timestamp);
-        }
-{%else%}
-        if (this.isLazy()) {
-            consumer = new LongConsumer() {
-                private {{t.java.ValueType}} lastValue = {{t.java.EmptyValue}};
-                @Override
-                public void accept(long timestamp) {
-                    var value = valueSupplier.get();
-                    if (value != lastValue) {
-                        entry.set(value, timestamp);
-                        lastValue = value;
-                    }
-                }
-            };
-        } else {
-            consumer = (timestamp) -> entry.set(valueSupplier.get(), timestamp);
-        }
-{%endif%}
-
-        addField(
-            entryName,
-            level,
-            consumer,
-            () -> entry.set(valueSupplier.get()),
-            entry::unpublish
-        );
-{%endif%}
+                publisher.set(array, timestamp);
+            }, publisher::close, level));
+            {%else%}
+            map.put(entryName, field((timestamp)->publisher.set(valueSupplier.get(), timestamp), publisher::close, level));
+        {%endif%}
+        
     }
-{%endfor%}
 
     @Override
-    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier, LogLevel level) {
+    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
+        add{{t.TypeName}}(entryName, valueSupplier, 0);
+    }
+    {%endfor%}
+
+    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier, int level) {
         var topic = table.getStructTopic(entryName, struct);
         var publisher = topic.publish();
-
-        LongConsumer consumer;
-
-        if (this.isLazy()) {
-            consumer = new LongConsumer() {
-                private R lastValue = null;
-                @Override
-                public void accept(long timestamp) {
-                    var value = valueSupplier.get();
-                    if (!(value.equals(lastValue))) {
-                        publisher.set(value, timestamp);
-                        lastValue = value;
-                    }
-                }
-            };
-        } else {
-            consumer = (timestamp) -> publisher.set(valueSupplier.get(), timestamp);
-        }
-
-        addField(
-            entryName,
-            level,
-            consumer,
-            ()->publisher.set(valueSupplier.get()),
-            ()->NetworkTablesJNI.unpublish(publisher.getHandle())
-        );
+        map.put(entryName, field((timestamp->publisher.set(valueSupplier.get(), timestamp)), publisher::close, level));
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {
-        if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
-            if (published.containsKey(entryName) && topics.containsKey(entryName) && structEntrys.containsKey(entryName)) {
-                ((StructEntry<R>) structEntrys.remove(entryName)).unpublish();
-                NetworkTablesJNI.unpublish(published.remove(entryName));
-            }
-            return;
-        } else if (level == LogLevel.DEFAULT && Monologue.isFileOnly()) {
-            Monologue.dataLogger.putStruct(entryName, struct, value);
-            if (published.containsKey(entryName) && topics.containsKey(entryName) && structEntrys.containsKey(entryName)) {
-                ((StructEntry<R>) structEntrys.remove(entryName)).unpublish();
-                NetworkTablesJNI.unpublish(published.remove(entryName));
-            }
-            return;
-        }
-
-        if (!topics.containsKey(entryName)) {
+    public <R> void putStruct(String entryName, Struct<R> struct, R value) {
+        var genericPublisher = publishers.get(entryName);
+        StructPublisher<R> publisher = null;
+        if (genericPublisher == null){
             var topic = table.getStructTopic(entryName, struct);
-            var publisher = topic.publish();
-            published.put(entryName, publisher.getHandle());
-            topics.put(entryName, topic);
+            publisher = topic.publish();
+            publishers.put(entryName, publisher);
+        } else if (genericPublisher instanceof StructPublisher<?>) {
+            publisher = (StructPublisher<R>) genericPublisher;
         }
-
-        if (!published.containsKey(entryName)) {
-            published.put(entryName, ((StructTopic<R>) topics.get(entryName)).publish().getHandle());
-        }
-
-        if (!structEntrys.containsKey(entryName)) {
-            var entry = ((StructTopic<R>) topics.get(entryName)).getEntry(null);
-            entry.set(value);
-            structEntrys.put(entryName, entry);
-        } else {
-            ((StructEntry<R>) structEntrys.get(entryName)).set(value);
+        if (publisher != null) {
+            publisher.set(value);
         }
     }
 
-    @Override
+    // public void put(String entryName, Translation2d value) {
+    //     var topic = table.getDoubleArrayTopic(entryName);
+    //     topic.setRetained(true);
+    //     var publisher = new Translation2dPublisher(topic);
+    //     publisher.set(value);
+    //     publisher.close();
+    // }
+
+    public void addNetworkTable(NetworkTable table) {
+        // NetworkTableInstance.getDefault()
+        //     .startEntryDataLog(table, table.getPath(), table.getPath());
+    }
+
+    public void addNetworkTable(NetworkTable table, String dlPath) {
+        // NetworkTableInstance.getDefault()
+        //     .startEntryDataLog(table, table.getPath(), dlPath);
+    }
+
     public void addSendable(String path, Sendable sendable) {        
         var builder = new SendableBuilderImpl();
         builder.setTable(table.getTable(path));
@@ -235,36 +136,31 @@ class NTLogger extends GenericLogger {
         sendables.add(builder);
     }
 
-    public void addSupplier(Supplier<?> supplier, DataType type, String path, boolean oneShot, LogLevel level) {
+    public void helper(Supplier<?> supplier, DataType type, String path, boolean oneShot, int level) {
         switch (type) {
-{%for t in types%}
+            {%for t in types%}
             case {{t.TypeName}}:
                 if (oneShot) {
-                    put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
+                    put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}());
                 } else {
                     add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
                 }
                 break;
-{%endfor%}
+            {%endfor%}
             case Sendable:
                 addSendable(path, (Sendable) supplier.get());
                 break;
-{%for t in geomTypes%}
+            {%for t in geomTypes%}
             case {{t.TypeName}}:
                 if (oneShot) {
-                    put(path, ({{t.TypeName}}) supplier.get(), level);
+                    put(path, ({{t.TypeName}}) supplier.get());
                 } else {
                     add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get(), level);
                 }
                 break;
-{%endfor%}
+            {%endfor%}
             default:
                 throw new IllegalArgumentException("Invalid data type");
         }
-    }
-
-    @Override
-    public boolean isNT() {
-        return true;
     }
 }

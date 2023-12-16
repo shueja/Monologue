@@ -19,36 +19,6 @@
             "open": true
           }
         },
-        "Translation2d##v_/Robot/structTest": {
-          "open": true
-        },
-        "Translation2d##v_/Robot/structTestDebug": {
-          "open": true
-        },
-        "internals": {
-          "asdfghjklqwertyuiopzxcvbnm,qwertyuio": {
-            "open": true
-          }
-        },
-        "open": true
-      },
-      "Shuffleboard": {
-        "Robot": {
-          "m_sbTest": {
-            "open": true
-          },
-          "open": true
-        }
-      },
-      "Tracer": {
-        "Robot Loop": {
-          "open": true,
-          "robotPeriodic": {
-            "open": true
-          }
-        }
-      },
-      "notfound": {
         "open": true
       }
     }
