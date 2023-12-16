@@ -8,6 +8,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
 
 import java.util.Arrays;
@@ -233,34 +234,7 @@ class NTLogger extends GenericLogger {
         builder.startListeners();
         table.getTable(path).getEntry(".controllable").setBoolean(false);
         sendables.add(builder);
-    }
-
-    public void addSupplier(Supplier<?> supplier, DataType type, String path, boolean oneShot, LogLevel level) {
-        switch (type) {
-{%for t in types%}
-            case {{t.TypeName}}:
-                if (oneShot) {
-                    put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
-                } else {
-                    add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
-                }
-                break;
-{%endfor%}
-            case Sendable:
-                addSendable(path, (Sendable) supplier.get());
-                break;
-{%for t in geomTypes%}
-            case {{t.TypeName}}:
-                if (oneShot) {
-                    put(path, ({{t.TypeName}}) supplier.get(), level);
-                } else {
-                    add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get(), level);
-                }
-                break;
-{%endfor%}
-            default:
-                throw new IllegalArgumentException("Invalid data type");
-        }
+        NetworkTablesJNI.startEntryDataLog(NetworkTableInstance.getDefault().getHandle(), DataLogManager.getLog(), path, path);
     }
 
     @Override

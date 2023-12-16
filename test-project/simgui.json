@@ -8,12 +8,21 @@
   },
   "NetworkTables": {
     "retained": {
+      ".schema": {
+        "open": true
+      },
       "Robot": {
         "open": true
       }
     },
     "transitory": {
       "Robot": {
+        "SwerveModuleState##v_/Robot/state": {
+          "Rotation2d##v_angle": {
+            "open": true
+          },
+          "open": true
+        },
         "Transform2d##v_/Robot/imperative": {
           "Translation2d##v_translation": {
             "open": true
@@ -25,10 +34,32 @@
         "Translation2d##v_/Robot/structTestDebug": {
           "open": true
         },
+        "field": {
+          "double[]##v_/Robot/field/Robot": {
+            "open": true
+          },
+          "open": true
+        },
         "internals": {
           "asdfghjklqwertyuiopzxcvbnm,qwertyuio": {
             "open": true
-          }
+          },
+          "asdfghjklqwertyuiopzxcvbnm,qwertyuio[0]": {
+            "SwerveModuleState##v_/Robot/internals/asdfghjklqwertyuiopzxcvbnm,qwertyuio[0]/state": {
+              "Rotation2d##v_angle": {
+                "open": true
+              },
+              "open": true
+            },
+            "open": true
+          },
+          "asdfghjklqwertyuiopzxcvbnm,qwertyuio[1]": {
+            "open": true
+          },
+          "asdfghjklqwertyuiopzxcvbnm,qwertyuio[2]": {
+            "open": true
+          },
+          "open": true
         },
         "open": true
       },

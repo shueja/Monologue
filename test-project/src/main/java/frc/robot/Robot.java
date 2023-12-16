@@ -10,6 +10,7 @@ import monologue.Annotations.*;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.BooleanEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -39,6 +40,8 @@ public class Robot extends TimedRobot implements Logged {
   ));
   double totalOfAvgs = 0;
   double avgsTaken = 0;
+
+  @LogNT SwerveModuleState state = new SwerveModuleState(1, new Rotation2d(0.5));
 
   @SuppressWarnings("unused")
   private Geometry geometry = new Geometry();
