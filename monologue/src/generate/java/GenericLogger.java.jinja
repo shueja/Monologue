@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.{{t.TypeName}};
 {%endfor%}
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.util.struct.Struct;
+import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import java.util.function.*;
@@ -154,23 +155,39 @@ abstract class GenericLogger {
 
     @SuppressWarnings("unchecked")
     protected <T> Struct<T> findStructType(Class<T> classObj) {
-      if (!structTypeCache.containsKey(classObj.getName())) {
-        structTypeCache.put(classObj.getName(), null);
-        Field field = null;
-        try {
-          field = classObj.getDeclaredField("struct");
-        } catch (NoSuchFieldException | SecurityException e) {
-        }
-        if (field != null) {
-          try {
-            structTypeCache.put(classObj.getName(), (Struct<?>) field.get(null));
-          } catch (IllegalArgumentException | IllegalAccessException e) {
-          }
-        }
-      }
-      return (Struct<T>) structTypeCache.get(classObj.getName());
-    }
+        if (StructSerializable.class.isAssignableFrom(classObj)) {
+            if (!structTypeCache.containsKey(classObj.getName())) {
+                structTypeCache.put(classObj.getName(), null);
+                Field field = null;
+                try {
+                field = classObj.getDeclaredField("struct");
+                } catch (NoSuchFieldException | SecurityException e) {
+                    DriverStation.reportError("Tried to find struct for type without struct field: " + classObj.toString(), false);
+                }
 
+                if (field != null) {
+                    if (Struct.class.isAssignableFrom(field.getType())) {
+                        try {
+                            structTypeCache.put(classObj.getName(), (Struct<T>) field.get(null));
+                        } catch (IllegalArgumentException | IllegalAccessException e) {
+                            DriverStation.reportError("Struct field was not static on: " + classObj.toString(), false);
+                        }
+                    }
+                    else {
+                        DriverStation.reportError("Struct field was not a struct on: " + classObj.toString(), false);
+                    }
+                }
+                else {
+                    DriverStation.reportError("Struct field was null on: " + classObj.toString(), false);
+                }
+                
+            }
+            return (Struct<T>) structTypeCache.get(classObj.getName());
+        } else {
+            DriverStation.reportError("Tried to find struct type for non-structable type " + classObj.toString(), false);
+            return null;
+        }
+    }
 
     public static long[] toLongArray(int[] arr) {
         long[] newArr = new long[arr.length];
@@ -187,6 +204,7 @@ abstract class GenericLogger {
             if (once){
                 putStruct(key, struct, supplier.get(), level);
             } else {
+                System.out.println("Adding struct " + key + " " + type.toString());
                 addStruct(key, struct, supplier, level);
             }
 
@@ -314,7 +332,7 @@ abstract class GenericLogger {
         //       if (value != null)
         //         Logger.recordOutput(key, (Mechanism2d) value);
         //     });
-      } else {
+      } else if (StructSerializable.class.isAssignableFrom(type)) {
         System.out.println("Generic " + key + type);
         addGeneric(key, type, supplier, level, once);
       }

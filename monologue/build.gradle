@@ -17,6 +17,11 @@ plugins {
     id 'com.diffplug.spotless' version '6.21.0' apply false
 }
 
+wpi.maven.useLocal = false
+wpi.maven.useDevelopment = true
+wpi.versions.wpilibVersion = '2024.+'
+wpi.versions.wpimathVersion = '2024.+'
+
 publishing {
     publications {
         maven(MavenPublication) {
