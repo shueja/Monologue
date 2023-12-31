@@ -1,8 +1,6 @@
 package monologue;
 
-{%for t in geomTypes%}
-import edu.wpi.first.math.geometry.{{t.TypeName}};
-{%endfor%}
+import edu.wpi.first.util.struct.StructSerializable;
 
 public interface Logged {
   public default String getPath() {
@@ -20,12 +18,10 @@ public interface Logged {
   }
 {%endfor%}
   //Geometry types
-{%for t in geomTypes%}
-  public default void log(String key, {{t.TypeName}} value) {
+  public default <R extends StructSerializable<R>> void log(String key, R value) {
     Monologue.ntLogger.put(getFullPath() + "/" + key, value);
   }
-  public default void log(String key, {{t.TypeName}} value, LogLevel level) {
+  public default <R extends StructSerializable<R>> void log(String key, R value, LogLevel level) {
     Monologue.ntLogger.put(getFullPath() + "/" + key, value, level);
   }
-{%endfor%}
 }

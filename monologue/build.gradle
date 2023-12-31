@@ -77,7 +77,6 @@ import com.hubspot.jinjava.Jinjava;
 import com.hubspot.jinjava.JinjavaConfig;
 
 def monologueTypesInputFile = file("src/generate/types.json")
-def geomTypesInputFile = file("src/generate/geomTypes.json")
 def monologueJavaTypesInputDir = file("src/generate/java")
 def monologueJavaTypesOutputDir = file("$buildDir/generated/main/java/monologue")
 
@@ -86,14 +85,12 @@ task monologueGenerateClasses() {
     group = "Monologue"
 
     inputs.file monologueTypesInputFile
-    inputs.file geomTypesInputFile
     inputs.dir monologueJavaTypesInputDir
     outputs.dir monologueJavaTypesOutputDir
 
     doLast {
         def jsonSlurper = new JsonSlurper()
         def jsonTypes = jsonSlurper.parse(monologueTypesInputFile)
-        def geomTypes = jsonSlurper.parse(geomTypesInputFile)
 
         monologueJavaTypesOutputDir.deleteDir()
         monologueJavaTypesOutputDir.mkdirs()
@@ -114,7 +111,6 @@ task monologueGenerateClasses() {
                     || file.name.startsWith("Logged")) {
                 def replacements = new HashMap<String,?>()
                 replacements.put("types", jsonTypes)
-                replacements.put("geomTypes", geomTypes)
                 def output = jinjava.render(template, replacements)
                 new File(monologueJavaTypesOutputDir, outfn).write(output)
             }

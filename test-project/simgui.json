@@ -38,6 +38,12 @@
         },
         "internals": {
           "Internal[0]": {
+            "ArmFeedforward##v_/Robot/internals/Internal[0]/construct": {
+              "open": true
+            },
+            "ArmFeedforward##v_/Robot/internals/Internal[0]/ff": {
+              "open": true
+            },
             "SwerveModuleState##v_/Robot/internals/Internal[0]/state": {
               "Rotation2d##v_angle": {
                 "open": true

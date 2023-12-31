@@ -1,8 +1,5 @@
 package monologue;
 
-{%for t in geomTypes%}
-import edu.wpi.first.math.geometry.{{t.TypeName}};
-{%endfor%}
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructSerializable;
@@ -76,14 +73,12 @@ abstract class GenericLogger {
     }
 {%endfor%}
 
-{%for t in geomTypes%}
-    public void put(String entryName, {{t.TypeName}} value) {
+    public void put(String entryName, StructSerializable value) {
         put(entryName, value, LogLevel.DEFAULT);
     }
-    public void put(String entryName, {{t.TypeName}} value, LogLevel level) {
-        putStruct(entryName, {{t.TypeName}}.struct, value, level);
+    public <R extends StructSerializable<R>> void put(String entryName, R value, LogLevel level) {
+        putStruct(entryName, (Struct<R>) findStructType(value.getClass()), value, level);
     }
-{%endfor%}
 
     public <R> void addStruct(String entryName, Struct<R> struct, Supplier<?extends R> valueSupplier, LogLevel level) {}
     public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {}

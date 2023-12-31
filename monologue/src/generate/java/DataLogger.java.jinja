@@ -1,9 +1,6 @@
 package monologue;
 
 
-{%for t in geomTypes%}
-import edu.wpi.first.math.geometry.{{t.TypeName}};
-{%endfor%}
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
@@ -171,47 +168,6 @@ class DataLogger extends GenericLogger {
 
         StructLogEntry.create(log, entryName, struct).append(value);
     }
-
-
-
-    // public  void addSupplier(Supplier<?> supplier, Class<?> type, String path, boolean oneShot, LogLevel level) {
-    //     switch (type) {
-    //     {%for t in types%}
-    //         case {{t.TypeName}}:
-    //             if (oneShot) {
-    //                 put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
-    //             } else {
-    //                 add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
-    //             }
-    //             break;
-    //         {%endfor%}
-    //         case Sendable:
-    //             addSendable(path, (Sendable) supplier.get());
-    //             break;
-    //         case NTSendable:
-    //             addSendable(path, (Sendable) supplier.get());
-    //             break;
-
-    //     {%for t in geomTypes%}
-    //         case {{t.TypeName}}:
-    //             if (oneShot) {
-    //                 put(path, ({{t.TypeName}}) supplier.get(), level);
-    //             } else {
-    //                 addStruct(path, {{t.TypeName}}.struct, ()->({{t.TypeName}}) supplier.get(), level);
-    //             }
-    //             break;
-    //     {%endfor%}
-    //         default:
-    //             var struct = findStructType()
-    //             if (oneShot) {
-    //                 put(path, ({{t.TypeName}}) supplier.get(), level);
-    //             } else {
-    //                 addStruct(path, {{t.TypeName}}.struct, ()->({{t.TypeName}}) supplier.get(), level);
-    //             }
-    //             break;
-    //             throw new IllegalArgumentException("Invalid data type");
-    //     }
-    // }
 
     @Override
     public boolean isNT() {
