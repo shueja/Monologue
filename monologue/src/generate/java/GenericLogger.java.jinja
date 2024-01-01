@@ -73,10 +73,10 @@ abstract class GenericLogger {
     }
 {%endfor%}
 
-    public <R extends StructSerializable<R>> void put(String entryName, R value) {
+    public <R extends StructSerializable> void put(String entryName, R value) {
         put(entryName, value, LogLevel.DEFAULT);
     }
-    public <R extends StructSerializable<R>> void put(String entryName, R value, LogLevel level) {
+    public <R extends StructSerializable> void put(String entryName, R value, LogLevel level) {
         putStruct(entryName, (Struct<R>) findStructType(value.getClass()), value, level);
     }
 
@@ -86,10 +86,10 @@ abstract class GenericLogger {
         putStruct(entryName, struct, value, LogLevel.DEFAULT);
     }
 
-    public <R extends StructSerializable<R>> void put(String entryName, R[] value) {
+    public <R extends StructSerializable> void put(String entryName, R[] value) {
         put(entryName, value, LogLevel.DEFAULT);
     }
-    public <R extends StructSerializable<R>> void put(String entryName, R[] value, LogLevel level) {
+    public <R extends StructSerializable> void put(String entryName, R[] value, LogLevel level) {
         Class<R> clazz = (Class<R>) value.getClass().getComponentType();
         putStructArray(entryName, (Struct<R>) findStructType(clazz), value, level);
     }

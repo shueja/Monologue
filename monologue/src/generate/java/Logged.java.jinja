@@ -17,17 +17,17 @@ public interface Logged {
     Monologue.ntLogger.put(getFullPath() + "/" + key, value, level);
   }
 {%endfor%}
-  public default <R extends StructSerializable<R>> void log(String key, R value) {
+  public default <R extends StructSerializable> void log(String key, R value) {
     Monologue.ntLogger.put(getFullPath() + "/" + key, value);
   }
-  public default <R extends StructSerializable<R>> void log(String key, R value, LogLevel level) {
+  public default <R extends StructSerializable> void log(String key, R value, LogLevel level) {
     Monologue.ntLogger.put(getFullPath() + "/" + key, value, level);
   }
 
-  public default <R extends StructSerializable<R>> void log(String key, R[] value) {
+  public default <R extends StructSerializable> void log(String key, R[] value) {
     Monologue.ntLogger.put(getFullPath() + "/" + key, value);
   }
-  public default <R extends StructSerializable<R>> void log(String key, R[] value, LogLevel level) {
+  public default <R extends StructSerializable> void log(String key, R[] value, LogLevel level) {
     Monologue.ntLogger.put(getFullPath() + "/" + key, value, level);
   }
 }
