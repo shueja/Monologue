@@ -37,16 +37,16 @@ class EvalAnno {
         public static LogMetadata from(AccessibleObject element) {
             if (element.isAnnotationPresent(LogFile.class)) {
                 LogFile anno = element.getAnnotation(LogFile.class);
-                return new LogMetadata(anno.level(), false, anno.path());
+                return new LogMetadata(anno.level(), false, anno.key());
             } else if (element.isAnnotationPresent(LogNT.class)) {
                 LogNT anno = element.getAnnotation(LogNT.class);
-                return new LogMetadata(anno.level(), false, anno.path());
+                return new LogMetadata(anno.level(), false, anno.key());
             } else if (element.isAnnotationPresent(LogOnceFile.class)) {
                 LogOnceFile anno = element.getAnnotation(LogOnceFile.class);
-                return new LogMetadata(LogLevel.DEFAULT, true, anno.path());
+                return new LogMetadata(LogLevel.DEFAULT, true, anno.key());
             } else if (element.isAnnotationPresent(LogOnceNT.class)) {
                 LogOnceNT anno = element.getAnnotation(LogOnceNT.class);
-                return new LogMetadata(LogLevel.DEFAULT, true, anno.path());
+                return new LogMetadata(LogLevel.DEFAULT, true, anno.key());
             } else {
                 return null;
             }
