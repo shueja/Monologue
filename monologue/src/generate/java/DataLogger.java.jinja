@@ -161,12 +161,50 @@ class DataLogger extends GenericLogger {
     }
 
     @Override
+    public <R> void addStructArray(String entryName, Struct<R> struct, Supplier<R[]> valueSupplier, LogLevel level) {
+        var entry = StructArrayLogEntry.create(log, entryName, struct);
+
+        LongConsumer consumer;
+
+        if (this.isLazy()) {
+            consumer = new LongConsumer() {
+                private R[] lastValue = null;
+                @Override
+                public void accept(long timestamp) {
+                    var value = valueSupplier.get();
+                    if (!(Arrays.deepEquals(value, lastValue))) {
+                        entry.append(value, timestamp);
+                        lastValue = value;
+                    }
+                }
+            };
+        } else {
+            consumer = (timestamp) -> entry.append(valueSupplier.get(), timestamp);
+        }
+
+        addField(
+            entryName,
+            level,
+            consumer
+        );
+    }
+
+    @Override
     public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {
         if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
             return;
         }
 
         StructLogEntry.create(log, entryName, struct).append(value);
+    }
+
+    @Override
+    public <R> void putStructArray(String entryName, Struct<R> struct, R[] value, LogLevel level) {
+        if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
+            return;
+        }
+
+        StructArrayLogEntry.create(log, entryName, struct).append(value);
     }
 
     @Override

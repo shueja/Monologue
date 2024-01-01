@@ -22,6 +22,9 @@
             "open": true
           }
         },
+        "SwerveModuleState[]##v_/Robot/stateArr": {
+          "open": true
+        },
         "Transform2d##v_/Robot/imperative": {
           "Translation2d##v_translation": {
             "open": true
@@ -68,8 +71,7 @@
           },
           "asdfghjklqwertyuiopzxcvbnm,qwertyuio[2]": {
             "open": true
-          },
-          "open": true
+          }
         },
         "open": true
       },

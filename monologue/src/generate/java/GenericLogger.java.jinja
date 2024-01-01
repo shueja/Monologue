@@ -73,7 +73,7 @@ abstract class GenericLogger {
     }
 {%endfor%}
 
-    public void put(String entryName, StructSerializable value) {
+    public <R extends StructSerializable<R>> void put(String entryName, R value) {
         put(entryName, value, LogLevel.DEFAULT);
     }
     public <R extends StructSerializable<R>> void put(String entryName, R value, LogLevel level) {
@@ -84,6 +84,19 @@ abstract class GenericLogger {
     public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {}
     public <R> void putStruct(String entryName, Struct<R> struct, R value) {
         putStruct(entryName, struct, value, LogLevel.DEFAULT);
+    }
+
+    public <R extends StructSerializable<R>> void put(String entryName, R[] value) {
+        put(entryName, value, LogLevel.DEFAULT);
+    }
+    public <R extends StructSerializable<R>> void put(String entryName, R[] value, LogLevel level) {
+        Class<R> clazz = (Class<R>) value.getClass().getComponentType();
+        putStructArray(entryName, (Struct<R>) findStructType(clazz), value, level);
+    }
+    public <R> void addStructArray(String entryName, Struct<R> struct, Supplier<R[]> valueSupplier, LogLevel level) {}
+    public <R> void putStructArray(String entryName, Struct<R> struct, R[] value, LogLevel level) {}
+    public <R> void putStructArray(String entryName, Struct<R> struct, R[] value) {
+        putStructArray(entryName, struct, value, LogLevel.DEFAULT);
     }
 
     public void addSendable(String path, Sendable sendable) {};
@@ -202,8 +215,23 @@ abstract class GenericLogger {
                 System.out.println("Adding struct " + key + " " + type.toString());
                 addStruct(key, struct, supplier, level);
             }
-
     }}
+
+    public <T> void addGenericArray(String key, Class<?> type, Supplier<?> supplier, LogLevel level, boolean once) {
+        if (type.isArray()) {
+            Class<T> componentType = (Class<T>) type.getComponentType();
+            Struct<T> struct = (Struct<T>) findStructType(componentType);
+            if (struct != null) {
+                if (once){
+                    putStructArray(key, struct, (T[]) supplier.get(), level);
+                } else {
+                    System.out.println("Adding struct array" + key + " " + type.toString());
+                    addStructArray(key, struct, ()->(T[]) supplier.get(), level);
+                }
+            }
+        }
+
+    }
 
     public <T> void addSupplier(String key, Class<?> type, Supplier<?> supplier, LogLevel level, boolean once) {
     if (type.isArray()) {
@@ -251,6 +279,10 @@ abstract class GenericLogger {
         } else {
             addStringArray(key, ()->(String[]) supplier.get(), level);
         }
+    } else if (StructSerializable.class.isAssignableFrom(componentType)) {
+        System.out.println("GenericArray " + key + type);
+        addGenericArray(key, type, supplier, level, once);
+      
       } else {
         DriverStation.reportError("Non-primitive arrays not supported by Monologue", true);
       }

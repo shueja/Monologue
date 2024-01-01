@@ -43,6 +43,11 @@ public class Robot extends TimedRobot implements Logged {
 
   @LogNT SwerveModuleState state = new SwerveModuleState(1, new Rotation2d(0.5));
 
+  @LogNT SwerveModuleState[] stateArr = new SwerveModuleState[] {
+    new SwerveModuleState(1, new Rotation2d(0.5)),
+    new SwerveModuleState(1, new Rotation2d(0.5))
+  };
+
   @SuppressWarnings("unused")
   private Geometry geometry = new Geometry();
 
@@ -53,6 +58,7 @@ public class Robot extends TimedRobot implements Logged {
   private Child child = new Child();
 
   private Translation2d translation2d = new Translation2d(1.0, 2.0);
+
 
   @LogNT private Field2d field = new Field2d();
 

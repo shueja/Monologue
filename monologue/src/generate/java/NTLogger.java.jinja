@@ -22,6 +22,7 @@ class NTLogger extends GenericLogger {
     private final Map<String, Integer> published = new HashMap<>();
     private final Map<String, Topic> topics = new HashMap<>();
     private final Map<String, StructEntry<?>> structEntrys = new HashMap<>();
+    private final Map<String, StructArrayEntry<?>> structArrayEntrys = new HashMap<>();
 
     {%for t in types%}
     @Override
@@ -186,6 +187,38 @@ class NTLogger extends GenericLogger {
     }
 
     @Override
+    public <R> void addStructArray(String entryName, Struct<R> struct, Supplier<R[]> valueSupplier, LogLevel level) {
+        var topic = table.getStructArrayTopic(entryName, struct);
+        var publisher = topic.publish();
+
+        LongConsumer consumer;
+
+        if (this.isLazy()) {
+            consumer = new LongConsumer() {
+                private R[] lastValue = null;
+                @Override
+                public void accept(long timestamp) {
+                    var value = (R[]) valueSupplier.get();
+                    if (!(Arrays.deepEquals(value, lastValue))) {
+                        publisher.set(value, timestamp);
+                        lastValue = value;
+                    }
+                }
+            };
+        } else {
+            consumer = (timestamp) -> publisher.set(valueSupplier.get(), timestamp);
+        }
+
+        addField(
+            entryName,
+            level,
+            consumer,
+            ()->publisher.set(valueSupplier.get()),
+            ()->NetworkTablesJNI.unpublish(publisher.getHandle())
+        );
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {
         if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
@@ -220,6 +253,44 @@ class NTLogger extends GenericLogger {
             structEntrys.put(entryName, entry);
         } else {
             ((StructEntry<R>) structEntrys.get(entryName)).set(value);
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <R> void putStructArray(String entryName, Struct<R> struct, R[] value, LogLevel level) {
+        if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
+            if (published.containsKey(entryName) && topics.containsKey(entryName) && structArrayEntrys.containsKey(entryName)) {
+                ((StructArrayEntry<R>) structArrayEntrys.remove(entryName)).unpublish();
+                NetworkTablesJNI.unpublish(published.remove(entryName));
+            }
+            return;
+        } else if (level == LogLevel.DEFAULT && Monologue.isFileOnly()) {
+            Monologue.dataLogger.putStructArray(entryName, struct, value);
+            if (published.containsKey(entryName) && topics.containsKey(entryName) && structArrayEntrys.containsKey(entryName)) {
+                ((StructArrayEntry<R>) structArrayEntrys.remove(entryName)).unpublish();
+                NetworkTablesJNI.unpublish(published.remove(entryName));
+            }
+            return;
+        }
+
+        if (!topics.containsKey(entryName)) {
+            var topic = table.getStructArrayTopic(entryName, struct);
+            var publisher = topic.publish();
+            published.put(entryName, publisher.getHandle());
+            topics.put(entryName, topic);
+        }
+
+        if (!published.containsKey(entryName)) {
+            published.put(entryName, ((StructArrayTopic<R>) topics.get(entryName)).publish().getHandle());
+        }
+
+        if (!structArrayEntrys.containsKey(entryName)) {
+            var entry = ((StructArrayTopic<R>) topics.get(entryName)).getEntry(null);
+            entry.set(value);
+            structArrayEntrys.put(entryName, entry);
+        } else {
+            ((StructArrayEntry<R>) structArrayEntrys.get(entryName)).set(value);
         }
     }
 
