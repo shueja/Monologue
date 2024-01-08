@@ -34,15 +34,21 @@ abstract class GenericLogger {
             }
             @Override
             public void accept(long timestamp) {
+                try {
                 run.accept(timestamp);
+                } catch (Exception e) {}
             }
             @Override
             public void open() {
+                try {
                 open.run();
+                } catch (Exception e) {}
             }
             @Override
             public void close() {
+                try {
                 close.run();
+                } catch (Exception e) {}
             }
         };
         runnableMap.get(level).add(runnable);
@@ -198,6 +204,7 @@ abstract class GenericLogger {
     }
 
     public static long[] toLongArray(int[] arr) {
+        if (arr == null) {return null;}
         long[] newArr = new long[arr.length];
         for (int i = 0; i < arr.length; i++) {
             newArr[i] = (long) arr[i];

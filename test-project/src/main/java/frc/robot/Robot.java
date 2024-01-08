@@ -27,11 +27,11 @@ import java.util.List;
 
 
 public class Robot extends TimedRobot implements Logged {
-  @LogOnceNT private boolean flippingBool = false;
+  @Log.NT.Once private boolean flippingBool = false;
   private int samples = 0;
-  @LogNT(level = NOT_FILE_ONLY) int debugSamples = 0;
-  @LogNT(level = DEFAULT) int lowbandwidthSamples = 0;
-  @LogNT(level = OVERRIDE_FILE_ONLY) int compSamples = 0;
+  @Log.NT(level = NOT_FILE_ONLY) int debugSamples = 0;
+  @Log.NT(level = DEFAULT) int lowbandwidthSamples = 0;
+  @Log.NT(level = OVERRIDE_FILE_ONLY) int compSamples = 0;
 
   ArrayList<Internal> internals = new ArrayList<>(List.of(
     new Internal(""),
@@ -41,9 +41,9 @@ public class Robot extends TimedRobot implements Logged {
   double totalOfAvgs = 0;
   double avgsTaken = 0;
 
-  @LogNT SwerveModuleState state = new SwerveModuleState(1, new Rotation2d(0.5));
+  @Log.NT SwerveModuleState state = new SwerveModuleState(1, new Rotation2d(0.5));
 
-  @LogNT SwerveModuleState[] stateArr = new SwerveModuleState[] {
+  @Log.NT SwerveModuleState[] stateArr = new SwerveModuleState[] {
     new SwerveModuleState(1, new Rotation2d(0.5)),
     new SwerveModuleState(1, new Rotation2d(0.5))
   };
@@ -60,10 +60,10 @@ public class Robot extends TimedRobot implements Logged {
   private Translation2d translation2d = new Translation2d(1.0, 2.0);
 
 
-  @LogNT private Field2d field = new Field2d();
+  @Log.NT private Field2d field = new Field2d();
 
-  @LogNT private Mechanism2d mech = new Mechanism2d(1, 1);
-  @LogFile private long[] array = {0, 1, 2};
+  @Log.NT private Mechanism2d mech = new Mechanism2d(1, 1);
+  @Log.NT private long[] array = {0, 1, 2};
 
   BooleanEntry fileOnlyEntry = NetworkTableInstance.getDefault().getBooleanTopic("/fileOnly").getEntry(false);
 
@@ -112,7 +112,9 @@ public class Robot extends TimedRobot implements Logged {
   public void autonomousPeriodic() {}
 
   @Override
-  public void teleopInit() {}
+  public void teleopInit() {
+    array=null;
+  }
 
   @Override
   public void teleopPeriodic() {}
@@ -140,7 +142,7 @@ public class Robot extends TimedRobot implements Logged {
     return "Robot";
   }
 
-  @LogNT
+  @Log.NT
   public String getStringPath() {
     return getFullPath();
   }

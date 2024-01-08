@@ -4,6 +4,20 @@
       "/FMSInfo": "FMSInfo",
       "/Robot/field": "Field2d",
       "/Robot/mech": "Mechanism2d"
+    },
+    "windows": {
+      "/Robot/field": {
+        "bottom": 544,
+        "builtin": "2023 Charged Up",
+        "height": 8.013679504394531,
+        "left": 46,
+        "right": 1088,
+        "top": 36,
+        "width": 16.541748046875,
+        "window": {
+          "visible": true
+        }
+      }
     }
   },
   "NetworkTables": {
@@ -37,6 +51,9 @@
           "double[]##v_/Robot/field/Robot": {
             "open": true
           },
+          "open": true
+        },
+        "int[]##v_/Robot/array": {
           "open": true
         },
         "internals": {
