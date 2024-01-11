@@ -219,7 +219,6 @@ abstract class GenericLogger {
             if (once){
                 putStruct(key, struct, supplier.get(), level);
             } else {
-                System.out.println("Adding struct " + key + " " + type.toString());
                 addStruct(key, struct, supplier, level);
             }
     }}
@@ -232,7 +231,6 @@ abstract class GenericLogger {
                 if (once){
                     putStructArray(key, struct, (T[]) supplier.get(), level);
                 } else {
-                    System.out.println("Adding struct array" + key + " " + type.toString());
                     addStructArray(key, struct, ()->(T[]) supplier.get(), level);
                 }
             }
@@ -287,7 +285,6 @@ abstract class GenericLogger {
             addStringArray(key, ()->(String[]) supplier.get(), level);
         }
     } else if (StructSerializable.class.isAssignableFrom(componentType)) {
-        System.out.println("GenericArray " + key + type);
         addGenericArray(key, type, supplier, level, once);
       
       } else {
@@ -352,22 +349,7 @@ abstract class GenericLogger {
             }
           }, level);
         }
-      //} else if (type.equals(Measure.class)) {
-        // callbacks.add(
-        //     () -> {
-        //       Object value = supplier.get();
-        //       if (value != null)
-        //         Logger.recordOutput(key, (Measure<?>) value);
-        //     });
-     /// } else if (type.equals(Mechanism2d.class)) {
-        // callbacks.add(
-        //     () -> {
-        //       Object value = supplier.get();
-        //       if (value != null)
-        //         Logger.recordOutput(key, (Mechanism2d) value);
-        //     });
       } else if (StructSerializable.class.isAssignableFrom(type)) {
-        System.out.println("Generic " + key + type);
         addGeneric(key, type, supplier, level, once);
       }
     }

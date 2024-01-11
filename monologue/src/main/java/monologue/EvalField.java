@@ -65,7 +65,7 @@ class EvalField {
       Monologue.logObj(logged, rootPath + "/" + pathOverride);
       recursed = true;
     } else if (field.getType().isArray()) {
-      // If primitive array
+      // If object array
       if (Object.class.isAssignableFrom(fieldOptional.get().getClass().getComponentType())) {
         int idx = 0;
         // Include all elements whose runtime class is Loggable
