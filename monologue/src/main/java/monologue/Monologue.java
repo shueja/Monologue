@@ -46,7 +46,9 @@ public class Monologue {
       throw new IllegalStateException("Monologue.setupMonologue() has already been called");
     }
     HAS_SETUP_BEEN_CALLED = true;
-
+    if (!rootpath.startsWith("/")) {
+      rootpath = "/" + rootpath;
+    }
     MonologueLog.RuntimeLog(
       "Monologue.setupMonologue() called on "
       + loggable.getClass().getName()
