@@ -4,6 +4,7 @@ package monologue;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.util.struct.Struct;
+import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
@@ -69,9 +70,9 @@ class NTLogger extends GenericLogger {
 {%endif%}
         }
 {%if t.TypeName == 'IntegerArray'%}
-        NetworkTablesJNI.set{{t.java.EntryName}}(published.get(entryName), 0, toLongArray(value));
+        NetworkTablesJNI.set{{t.java.EntryName}}(published.get(entryName), WPIUtilJNI.now(), toLongArray(value));
 {%else%}
-        NetworkTablesJNI.set{{t.java.EntryName}}(published.get(entryName), 0, value);
+        NetworkTablesJNI.set{{t.java.EntryName}}(published.get(entryName), WPIUtilJNI.now(), value);
 {%endif%}
     }
 
