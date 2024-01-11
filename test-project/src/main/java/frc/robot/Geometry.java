@@ -4,64 +4,64 @@
 
 package frc.robot;
 
-import monologue.Annotations.LogNT;
+import monologue.Annotations.*;
 import monologue.Logged;
 import edu.wpi.first.math.geometry.*;
 
 /** Add your docs here. */
 public class Geometry implements Logged {
-  @LogNT private Pose2d m_pose2d = new Pose2d();
+  @Log.NT private Pose2d m_pose2d = new Pose2d();
 
-  @LogNT
+  @Log.NT
   private Pose2d getPose2d() {
     return m_pose2d;
   }
 
-  @LogNT private Translation2d m_translation2d = new Translation2d();
+  @Log.NT private Translation2d m_translation2d = new Translation2d();
 
-  @LogNT
+  @Log.NT
   private Translation2d getTranslation2d() {
     return m_translation2d;
   }
 
-  @LogNT private Transform2d m_transform2d = new Transform2d();
+  @Log.NT private Transform2d m_transform2d = new Transform2d();
 
-  @LogNT
+  @Log.NT
   private Transform2d getTransform2d() {
     return m_transform2d;
   }
 
-  @LogNT private Rotation2d m_rotation2d = new Rotation2d();
+  @Log.NT private Rotation2d m_rotation2d = new Rotation2d();
 
-  @LogNT
+  @Log.NT
   private Rotation2d getRotation2d() {
     return m_rotation2d;
   }
 
-  @LogNT private Pose3d m_pose3d = new Pose3d();
+  @Log.NT private Pose3d m_pose3d = new Pose3d();
 
-  @LogNT
+  @Log.NT
   private Pose3d getPose3d() {
     return m_pose3d;
   }
 
-  @LogNT private Translation3d m_translation3d = new Translation3d();
+  @Log.NT private Translation3d m_translation3d = new Translation3d();
 
-  @LogNT
+  @Log.NT
   private Translation3d getTranslation3d() {
     return m_translation3d;
   }
 
-  @LogNT private Transform3d m_transform3d = new Transform3d();
+  @Log.NT private Transform3d m_transform3d = new Transform3d();
 
-  @LogNT
+  @Log.NT
   private Transform3d getTransform3d() {
     return m_transform3d;
   }
 
-  @LogNT private Rotation3d m_rotation3d = new Rotation3d();
+  @Log.NT private Rotation3d m_rotation3d = new Rotation3d();
 
-  @LogNT
+  @Log.NT
   private Rotation3d getRotation3d() {
     return m_rotation3d;
   }

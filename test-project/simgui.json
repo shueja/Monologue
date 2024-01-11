@@ -4,16 +4,41 @@
       "/FMSInfo": "FMSInfo",
       "/Robot/field": "Field2d",
       "/Robot/mech": "Mechanism2d"
+    },
+    "windows": {
+      "/Robot/field": {
+        "bottom": 544,
+        "builtin": "2023 Charged Up",
+        "height": 8.013679504394531,
+        "left": 46,
+        "right": 1088,
+        "top": 36,
+        "width": 16.541748046875,
+        "window": {
+          "visible": true
+        }
+      }
     }
   },
   "NetworkTables": {
     "retained": {
+      ".schema": {
+        "open": true
+      },
       "Robot": {
         "open": true
       }
     },
     "transitory": {
       "Robot": {
+        "SwerveModuleState##v_/Robot/state": {
+          "Rotation2d##v_angle": {
+            "open": true
+          }
+        },
+        "SwerveModuleState[]##v_/Robot/stateArr": {
+          "open": true
+        },
         "Transform2d##v_/Robot/imperative": {
           "Translation2d##v_translation": {
             "open": true
@@ -22,11 +47,46 @@
         "Translation2d##v_/Robot/structTest": {
           "open": true
         },
-        "Translation2d##v_/Robot/structTestDebug": {
+        "field": {
+          "double[]##v_/Robot/field/Robot": {
+            "open": true
+          },
+          "open": true
+        },
+        "int[]##v_/Robot/array": {
           "open": true
         },
         "internals": {
+          "Internal[0]": {
+            "ArmFeedforward##v_/Robot/internals/Internal[0]/construct": {
+              "open": true
+            },
+            "ArmFeedforward##v_/Robot/internals/Internal[0]/ff": {
+              "open": true
+            },
+            "SwerveModuleState##v_/Robot/internals/Internal[0]/state": {
+              "Rotation2d##v_angle": {
+                "open": true
+              }
+            },
+            "open": true
+          },
           "asdfghjklqwertyuiopzxcvbnm,qwertyuio": {
+            "open": true
+          },
+          "asdfghjklqwertyuiopzxcvbnm,qwertyuio[0]": {
+            "SwerveModuleState##v_/Robot/internals/asdfghjklqwertyuiopzxcvbnm,qwertyuio[0]/state": {
+              "Rotation2d##v_angle": {
+                "open": true
+              },
+              "open": true
+            },
+            "open": true
+          },
+          "asdfghjklqwertyuiopzxcvbnm,qwertyuio[1]": {
+            "open": true
+          },
+          "asdfghjklqwertyuiopzxcvbnm,qwertyuio[2]": {
             "open": true
           }
         },
@@ -52,5 +112,8 @@
         "open": true
       }
     }
+  },
+  "NetworkTables Info": {
+    "visible": true
   }
 }

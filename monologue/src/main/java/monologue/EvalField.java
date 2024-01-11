@@ -65,7 +65,7 @@ class EvalField {
       Monologue.logObj(logged, rootPath + "/" + pathOverride);
       recursed = true;
     } else if (field.getType().isArray()) {
-      // If primitive array
+      // If object array
       if (Object.class.isAssignableFrom(fieldOptional.get().getClass().getComponentType())) {
         int idx = 0;
         // Include all elements whose runtime class is Loggable
@@ -116,50 +116,50 @@ class EvalField {
 
     String name = logMetadata.relativePath.equals("") ? field.getName() : logMetadata.relativePath;
     String key = rootPath + "/" + name;
-    DataType type;
+    Class<?> type;
 
     try {
-      type = DataType.fromClass(field.getType());
+      type = field.getType();
     } catch (IllegalArgumentException e) {
       MonologueLog.RuntimeWarn("Tried to log invalid type " + name + "(" + field.getType() + ") in " + rootPath);
       return false;
     }
 
     if (logType == LogType.File) {
-      if (type == DataType.NTSendable) {
+      if (NTSendable.class.isAssignableFrom(type)) {
         Monologue.dataLogger.addSendable(key, (NTSendable) getField(field, loggable).get());
-      } else if (type == DataType.Sendable) {
+      } else if (Sendable.class.isAssignableFrom(type)) {
         Monologue.dataLogger.addSendable(key, (Sendable) getField(field, loggable).get());
       } else {
         Monologue.dataLogger.addSupplier(
-            getSupplier(field, loggable),
-            type,
             key,
-            logMetadata.once,
-            logMetadata.level
+            field.getType(),
+            getSupplier(field, loggable),
+            logMetadata.level,
+            logMetadata.once
         );
       }
     } else if (logType == LogType.Nt) {
-      if (type == DataType.Sendable || type == DataType.NTSendable) {
+      if (Sendable.class.isAssignableFrom(type) || NTSendable.class.isAssignableFrom(type)) {
         Monologue.ntLogger.addSendable(key, (Sendable) getField(field, loggable).get());
       } else {
         Monologue.ntLogger.addSupplier(
-            getSupplier(field, loggable),
-            type,
             key,
-            logMetadata.once,
-            logMetadata.level
+            field.getType(),
+            getSupplier(field, loggable),
+            logMetadata.level,
+            logMetadata.once
         );
         if (logMetadata.level == LogLevel.DEFAULT && !logMetadata.once) {
           // The data *could* need to only go to datalog if its default log level,
           // register a supplier for dataLogger that can pickup the logging when the nt
           // one is deactivated by changing the FILE_ONLY flag
           Monologue.dataLogger.addSupplier(
-            getSupplier(field, loggable),
-            type,
-            key,
-            logMetadata.once,
-            logMetadata.level
+              key,
+              field.getType(),
+              getSupplier(field, loggable),
+              logMetadata.level,
+              logMetadata.once
           );
         }
       }

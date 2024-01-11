@@ -2,10 +2,7 @@ package monologue;
 
 import java.lang.reflect.AccessibleObject;
 
-import monologue.Annotations.LogFile;
-import monologue.Annotations.LogNT;
-import monologue.Annotations.LogOnceFile;
-import monologue.Annotations.LogOnceNT;
+import monologue.Annotations.Log;
 
 class EvalAnno {
     
@@ -14,9 +11,9 @@ class EvalAnno {
     }
 
     public static LogType annoEval(AccessibleObject element) {
-        if (element.isAnnotationPresent(LogNT.class) || element.isAnnotationPresent(LogOnceNT.class)) {
+        if (element.isAnnotationPresent(Log.NT.class) || element.isAnnotationPresent(Log.NT.Once.class)) {
             return LogType.Nt;
-        } else if (element.isAnnotationPresent(LogFile.class) || element.isAnnotationPresent(LogOnceFile.class)) {
+        } else if (element.isAnnotationPresent(Log.File.class) || element.isAnnotationPresent(Log.File.Once.class)) {
             return LogType.File;
         } else {
             return LogType.None;
@@ -35,18 +32,18 @@ class EvalAnno {
         }
 
         public static LogMetadata from(AccessibleObject element) {
-            if (element.isAnnotationPresent(LogFile.class)) {
-                LogFile anno = element.getAnnotation(LogFile.class);
-                return new LogMetadata(anno.level(), false, anno.path());
-            } else if (element.isAnnotationPresent(LogNT.class)) {
-                LogNT anno = element.getAnnotation(LogNT.class);
-                return new LogMetadata(anno.level(), false, anno.path());
-            } else if (element.isAnnotationPresent(LogOnceFile.class)) {
-                LogOnceFile anno = element.getAnnotation(LogOnceFile.class);
-                return new LogMetadata(LogLevel.DEFAULT, true, anno.path());
-            } else if (element.isAnnotationPresent(LogOnceNT.class)) {
-                LogOnceNT anno = element.getAnnotation(LogOnceNT.class);
-                return new LogMetadata(LogLevel.DEFAULT, true, anno.path());
+            if (element.isAnnotationPresent(Log.File.class)) {
+                Log.File anno = element.getAnnotation(Log.File.class);
+                return new LogMetadata(anno.level(), false, anno.key());
+            } else if (element.isAnnotationPresent(Log.NT.class)) {
+                Log.NT anno = element.getAnnotation(Log.NT.class);
+                return new LogMetadata(anno.level(), false, anno.key());
+            } else if (element.isAnnotationPresent(Log.File.Once.class)) {
+                Log.File.Once anno = element.getAnnotation(Log.File.Once.class);
+                return new LogMetadata(LogLevel.DEFAULT, true, anno.key());
+            } else if (element.isAnnotationPresent(Log.NT.Once.class)) {
+                Log.NT.Once anno = element.getAnnotation(Log.NT.Once.class);
+                return new LogMetadata(LogLevel.DEFAULT, true, anno.key());
             } else {
                 return null;
             }

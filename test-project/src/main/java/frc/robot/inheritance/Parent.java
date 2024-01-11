@@ -4,24 +4,24 @@ import monologue.Annotations.*;
 import monologue.Logged;
 
 public class Parent extends GrandParent implements Logged {
-    @LogNT
+    @Log.NT
     public Boolean parentPublicTrue = true;
-    @LogNT
+    @Log.NT
     private Boolean parentPrivateTrue = true;
-    @LogNT
+    @Log.NT
     protected Boolean parentProtectedTrue = true;
 
-    @LogNT
+    @Log.NT
     public Double parentPublicRand() {
         return Math.random();
     }
 
-    @LogNT
+    @Log.NT
     private Double parentPrivateRand() {
         return Math.random();
     }
 
-    @LogNT
+    @Log.NT
     protected Double parentProtectedRand() {
         return Math.random();
     }

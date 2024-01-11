@@ -1,13 +1,11 @@
 package monologue;
 
 
-{%for t in geomTypes%}
-import edu.wpi.first.math.geometry.{{t.TypeName}};
-{%endfor%}
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
 
 import java.util.Arrays;
@@ -24,10 +22,17 @@ class NTLogger extends GenericLogger {
     private final Map<String, Integer> published = new HashMap<>();
     private final Map<String, Topic> topics = new HashMap<>();
     private final Map<String, StructEntry<?>> structEntrys = new HashMap<>();
+    private final Map<String, StructArrayEntry<?>> structArrayEntrys = new HashMap<>();
 
     {%for t in types%}
     @Override
     public void put(String entryName, {{t.java.ValueType}} value, LogLevel level) {
+        {%if t.java.ValueType == 'String'%}
+        if (value == null) {return;}
+        {%endif%}
+        {%if t.java.IsArray%}
+        if (value == null) {return;}
+        {%endif%}
         if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
             if (published.containsKey(entryName) && topics.containsKey(entryName)) {
                 NetworkTablesJNI.unpublish(
@@ -87,22 +92,34 @@ class NTLogger extends GenericLogger {
                 private long[] lastValue = new long[] {};
                 @Override
                 public void accept(long timestamp) {
+                    var intarr = valueSupplier.get();
+                    if (intarr == null) { return;}
                     var value = toLongArray(valueSupplier.get());
                     if (!(Arrays.equals(value, lastValue))) {
                         entry.set(value, timestamp);
                         lastValue = value;
                     }
+
+ 
                 }
             };
         } else {
-            consumer = (timestamp) -> entry.set(toLongArray(valueSupplier.get()), timestamp);
+            consumer = (timestamp) -> {
+                var value = valueSupplier.get();
+                if (value == null) { return;}
+                entry.set(toLongArray(value), timestamp);
+            };
         }
 
         addField(
             entryName,
             level,
             consumer,
-            () -> entry.set(toLongArray(valueSupplier.get())),
+            () -> {
+                var value = valueSupplier.get();
+                if (value == null) { return;}
+                entry.set(toLongArray(value));
+            },
             entry::unpublish
         );
 {%else%}
@@ -113,18 +130,24 @@ class NTLogger extends GenericLogger {
                 @Override
                 public void accept(long timestamp) {
                     var value = valueSupplier.get();
-{%if t.TypeName == 'StringArray'%}
+                    if (value == null) { return;}
+                    {%if t.TypeName == 'StringArray'%}
                     if (!(Arrays.deepEquals(value, lastValue))) {
-{%else%}
+                    {%else%}
                     if (!(Arrays.equals(value, lastValue))) {
-{%endif%}
+                    {%endif%}
                         entry.set(value, timestamp);
                         lastValue = value;
                     }
                 }
             };
         } else {
-            consumer = (timestamp) -> entry.set(valueSupplier.get(), timestamp);
+            consumer = (timestamp) -> {
+                var value = valueSupplier.get();
+                if (value != null) {
+                    entry.set(value, timestamp);
+                }
+            };
         }
 {%else%}
         if (this.isLazy()) {
@@ -132,7 +155,9 @@ class NTLogger extends GenericLogger {
                 private {{t.java.ValueType}} lastValue = {{t.java.EmptyValue}};
                 @Override
                 public void accept(long timestamp) {
+                    
                     var value = valueSupplier.get();
+                    if (value == null) { return; }
                     if (value != lastValue) {
                         entry.set(value, timestamp);
                         lastValue = value;
@@ -140,7 +165,11 @@ class NTLogger extends GenericLogger {
                 }
             };
         } else {
-            consumer = (timestamp) -> entry.set(valueSupplier.get(), timestamp);
+            consumer = (timestamp) -> {
+                var value = valueSupplier.get();
+                if (value == null) { return; }
+                entry.set(value, timestamp);
+            };
         }
 {%endif%}
 
@@ -148,7 +177,11 @@ class NTLogger extends GenericLogger {
             entryName,
             level,
             consumer,
-            () -> entry.set(valueSupplier.get()),
+            () -> {
+                var value = valueSupplier.get();
+                if (value == null) { return;}
+                entry.set(value);
+            },
             entry::unpublish
         );
 {%endif%}
@@ -167,7 +200,9 @@ class NTLogger extends GenericLogger {
                 private R lastValue = null;
                 @Override
                 public void accept(long timestamp) {
+                    
                     var value = valueSupplier.get();
+                    if (value == null) { return;}
                     if (!(value.equals(lastValue))) {
                         publisher.set(value, timestamp);
                         lastValue = value;
@@ -175,14 +210,63 @@ class NTLogger extends GenericLogger {
                 }
             };
         } else {
-            consumer = (timestamp) -> publisher.set(valueSupplier.get(), timestamp);
+            consumer = (timestamp) -> {
+                var value = valueSupplier.get();
+                if (value == null) { return;}
+                publisher.set(value, timestamp);
+            };
         }
 
         addField(
             entryName,
             level,
             consumer,
-            ()->publisher.set(valueSupplier.get()),
+            () -> {
+                var value = valueSupplier.get();
+                if (value == null) { return;}
+                publisher.set(value);
+            },
+            ()->NetworkTablesJNI.unpublish(publisher.getHandle())
+        );
+    }
+
+    @Override
+    public <R> void addStructArray(String entryName, Struct<R> struct, Supplier<R[]> valueSupplier, LogLevel level) {
+        var topic = table.getStructArrayTopic(entryName, struct);
+        var publisher = topic.publish();
+
+        LongConsumer consumer;
+
+        if (this.isLazy()) {
+            consumer = new LongConsumer() {
+                private R[] lastValue = null;
+                @Override
+                public void accept(long timestamp) {
+                    var value = (R[]) valueSupplier.get();
+                    if (value == null) {return;} 
+                    if (!(Arrays.deepEquals(value, lastValue))) {
+                        publisher.set(value, timestamp);
+                        lastValue = value;
+                    }
+                }
+            };
+        } else {
+            consumer = (timestamp) -> {
+                var value = valueSupplier.get();
+                if (value == null) {return;}
+                publisher.set(value, timestamp);
+            };
+        }
+
+        addField(
+            entryName,
+            level,
+            consumer,
+            () -> {
+                var value = valueSupplier.get();
+                if (value == null) {return;}
+                publisher.set(value);
+            },
             ()->NetworkTablesJNI.unpublish(publisher.getHandle())
         );
     }
@@ -190,6 +274,7 @@ class NTLogger extends GenericLogger {
     @Override
     @SuppressWarnings("unchecked")
     public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {
+        if (value == null) {return;}
         if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
             if (published.containsKey(entryName) && topics.containsKey(entryName) && structEntrys.containsKey(entryName)) {
                 ((StructEntry<R>) structEntrys.remove(entryName)).unpublish();
@@ -226,41 +311,54 @@ class NTLogger extends GenericLogger {
     }
 
     @Override
-    public void addSendable(String path, Sendable sendable) {        
+    @SuppressWarnings("unchecked")
+    public <R> void putStructArray(String entryName, Struct<R> struct, R[] value, LogLevel level) {
+        if (value == null) {return;}
+        if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
+            if (published.containsKey(entryName) && topics.containsKey(entryName) && structArrayEntrys.containsKey(entryName)) {
+                ((StructArrayEntry<R>) structArrayEntrys.remove(entryName)).unpublish();
+                NetworkTablesJNI.unpublish(published.remove(entryName));
+            }
+            return;
+        } else if (level == LogLevel.DEFAULT && Monologue.isFileOnly()) {
+            Monologue.dataLogger.putStructArray(entryName, struct, value);
+            if (published.containsKey(entryName) && topics.containsKey(entryName) && structArrayEntrys.containsKey(entryName)) {
+                ((StructArrayEntry<R>) structArrayEntrys.remove(entryName)).unpublish();
+                NetworkTablesJNI.unpublish(published.remove(entryName));
+            }
+            return;
+        }
+
+        if (!topics.containsKey(entryName)) {
+            var topic = table.getStructArrayTopic(entryName, struct);
+            var publisher = topic.publish();
+            published.put(entryName, publisher.getHandle());
+            topics.put(entryName, topic);
+        }
+
+        if (!published.containsKey(entryName)) {
+            published.put(entryName, ((StructArrayTopic<R>) topics.get(entryName)).publish().getHandle());
+        }
+
+        if (!structArrayEntrys.containsKey(entryName)) {
+            var entry = ((StructArrayTopic<R>) topics.get(entryName)).getEntry(null);
+            entry.set(value);
+            structArrayEntrys.put(entryName, entry);
+        } else {
+            ((StructArrayEntry<R>) structArrayEntrys.get(entryName)).set(value);
+        }
+    }
+
+    @Override
+    public void addSendable(String path, Sendable sendable) {   
+        if (sendable == null) {return;}     
         var builder = new SendableBuilderImpl();
         builder.setTable(table.getTable(path));
         sendable.initSendable(builder);
         builder.startListeners();
         table.getTable(path).getEntry(".controllable").setBoolean(false);
         sendables.add(builder);
-    }
-
-    public void addSupplier(Supplier<?> supplier, DataType type, String path, boolean oneShot, LogLevel level) {
-        switch (type) {
-{%for t in types%}
-            case {{t.TypeName}}:
-                if (oneShot) {
-                    put(path, ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
-                } else {
-                    add{{t.TypeName}}(path, () -> ({{t.java.ValueType}}) supplier.{{t.java.SupplierGet}}(), level);
-                }
-                break;
-{%endfor%}
-            case Sendable:
-                addSendable(path, (Sendable) supplier.get());
-                break;
-{%for t in geomTypes%}
-            case {{t.TypeName}}:
-                if (oneShot) {
-                    put(path, ({{t.TypeName}}) supplier.get(), level);
-                } else {
-                    add{{t.TypeName}}(path, ()->({{t.TypeName}}) supplier.get(), level);
-                }
-                break;
-{%endfor%}
-            default:
-                throw new IllegalArgumentException("Invalid data type");
-        }
+        NetworkTablesJNI.startEntryDataLog(NetworkTableInstance.getDefault().getHandle(), DataLogManager.getLog(), path, path);
     }
 
     @Override
