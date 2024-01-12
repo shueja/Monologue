@@ -4,6 +4,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
 import edu.wpi.first.util.datalog.*;
+import monologue.NTIntegerArrayLogEntry;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.DataLogManager;
 import java.util.Arrays;
@@ -34,8 +35,11 @@ class DataLogger extends GenericLogger {
         if (value == null) {return;}
         {%endif%}
 {%if t.TypeName == 'IntegerArray'%}
-        new {{t.java.EntryName}}LogEntry(log, entryName)
+        new NTIntegerArrayLogEntry(log, entryName)
             .append(toLongArray(value));
+{%elif t.TypeName == 'LongArray'%}
+        new NTIntegerArrayLogEntry(log, entryName)
+        .append(value);
 {%else%}
         new {{t.java.EntryName}}LogEntry(log, entryName).append(value);
 {%endif%}
@@ -45,9 +49,12 @@ class DataLogger extends GenericLogger {
     public void add{{t.TypeName}}(String entryName,
     {{t.java.Supplier}}valueSupplier,
     LogLevel level)
-    {
+    {   
+        {%if t.TypeName == 'IntegerArray' or t.TypeName == 'LongArray'%}
+        var entry = new NTIntegerArrayLogEntry(log, entryName);
+{%else %}
         var entry = new {{t.java.EntryName}}LogEntry(log, entryName);
-
+{%endif%}
         LongConsumer consumer;
 {%if t.TypeName == 'IntegerArray'%}
         if (this.isLazy()) {
@@ -60,7 +67,10 @@ class DataLogger extends GenericLogger {
                     var value = toLongArray(valueSupplier.get());
                     if (!(Arrays.equals(value, lastValue))) {
                         entry.append(value, timestamp);
-                        lastValue = value;
+                        if (lastValue.length != value.length) {
+                            lastValue = new long[value.length];
+                        }
+                        System.arraycopy(value, 0, lastValue, 0, value.length);
                     }
                 }
             };
@@ -92,7 +102,10 @@ class DataLogger extends GenericLogger {
                     if (!(Arrays.equals(value, lastValue))) {
     {%endif%}
                         entry.append(value, timestamp);
-                        lastValue = value;
+                        if (lastValue.length != value.length) {
+                            lastValue = new {{t.java.ComponentType}}[value.length];
+                        }
+                        System.arraycopy(value, 0, lastValue, 0, value.length);
                     }
                 }
             };
@@ -171,7 +184,7 @@ class DataLogger extends GenericLogger {
 
         if (this.isLazy()) {
             consumer = new LongConsumer() {
-                private R lastValue = null;
+                private byte[] lastValue = new byte[] {};
 
                 @Override
                 public void accept(long timestamp) {
@@ -179,9 +192,13 @@ class DataLogger extends GenericLogger {
                     if (value == null) {
                         return;
                     }
-                    if (!(value.equals(lastValue))) {
+                    var packed = struct.pack(value);
+                    if (!(Arrays.equals(packed, lastValue))) {
                         entry.append(value, timestamp);
-                        lastValue = value;
+                        if (lastValue.length != value.length) {
+                            lastValue = new byte[value.length];
+                        }
+                        lastValue = packed;
                     }
                 }
             };

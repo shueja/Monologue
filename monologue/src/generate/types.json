@@ -97,7 +97,8 @@
       "FunctionTypeSuffix": "<byte[]>",
       "EntryName": "Raw",
       "SupplierGet" : "get",
-      "IsArray" : true
+      "IsArray" : true,
+      "ComponentType": "byte"
     }
   },
   {
@@ -111,7 +112,8 @@
       "FunctionTypeSuffix": "<boolean[]>",
       "EntryName": "BooleanArray",
       "SupplierGet" : "get",
-      "IsArray" : true
+      "IsArray" : true,
+      "ComponentType": "boolean"
     }
   },
   {
@@ -125,7 +127,8 @@
       "FunctionTypeSuffix": "<int[]>",
       "EntryName": "IntegerArray",
       "SupplierGet" : "get",
-      "IsArray" : true
+      "IsArray" : true,
+      "ComponentType": "int"
     }
   },
   {
@@ -139,7 +142,8 @@
       "FunctionTypeSuffix": "<long[]>",
       "EntryName": "IntegerArray",
       "SupplierGet" : "get",
-      "IsArray" : true
+      "IsArray" : true,
+      "ComponentType" : "long"
     }
   },
   {
@@ -153,7 +157,8 @@
       "FunctionTypeSuffix": "<float[]>",
       "EntryName": "FloatArray",
       "SupplierGet" : "get",
-      "IsArray" : true
+      "IsArray" : true,
+      "ComponentType": "float"
     }
   },
   {
@@ -167,7 +172,8 @@
       "FunctionTypeSuffix": "<double[]>",
       "EntryName": "DoubleArray",
       "SupplierGet" : "get",
-      "IsArray" : true
+      "IsArray" : true,
+      "ComponentType": "double"
     }
   },
   {
@@ -180,7 +186,8 @@
       "FunctionTypeSuffix": "<String[]>",
       "EntryName": "StringArray",
       "SupplierGet" : "get",
-      "IsArray" : true
+      "IsArray" : true,
+      "ComponentType": "String"
     }
   }
 ]

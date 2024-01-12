@@ -47,6 +47,9 @@
         "Translation2d##v_/Robot/structTest": {
           "open": true
         },
+        "double[]##v_/Robot/array": {
+          "open": true
+        },
         "field": {
           "double[]##v_/Robot/field/Robot": {
             "open": true
