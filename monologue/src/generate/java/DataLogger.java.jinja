@@ -77,8 +77,7 @@ class DataLogger extends GenericLogger {
             level,
             consumer
         );
-{%else%}
-{%if t.java.IsArray == true%}
+{%elif t.java.IsArray == true%}
         if (this.isLazy()) {
             consumer = new LongConsumer() {
                 private {{t.java.ValueType}} lastValue = new {{t.java.ValueType}} {};
@@ -104,6 +103,11 @@ class DataLogger extends GenericLogger {
                 }
             };
         }
+        addField(
+            entryName,
+            level,
+            consumer
+        );
 {%else%}
         if (this.isLazy()) {
             consumer = new LongConsumer() {
@@ -127,7 +131,6 @@ class DataLogger extends GenericLogger {
                 entry.append(value, timestamp);
             };
         }
-{%endif%}
 
         addField(
             entryName,

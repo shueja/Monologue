@@ -123,8 +123,7 @@ class NTLogger extends GenericLogger {
             },
             entry::unpublish
         );
-{%else%}
-{%if t.java.IsArray == true%}
+{%elif t.java.IsArray == true%}
         if (this.isLazy()) {
             consumer = new LongConsumer() {
                 private {{t.java.ValueType}} lastValue = new {{t.java.ValueType}} {};
@@ -150,6 +149,18 @@ class NTLogger extends GenericLogger {
                 }
             };
         }
+
+        addField(
+            entryName,
+            level,
+            consumer,
+            () -> {
+                var value = valueSupplier.get();
+                if (value == null) { return;}
+                entry.set(value);
+            },
+            entry::unpublish
+        );
 {%else%}
         if (this.isLazy()) {
             consumer = new LongConsumer() {
@@ -172,7 +183,6 @@ class NTLogger extends GenericLogger {
                 entry.set(value, timestamp);
             };
         }
-{%endif%}
 
         addField(
             entryName,
