@@ -4,12 +4,15 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
 import edu.wpi.first.util.datalog.*;
+import monologue.NTIntegerArrayLogEntry;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.DataLogManager;
 import java.util.Arrays;
 import java.util.function.Supplier;
 import java.util.function.LongConsumer;
 import edu.wpi.first.util.struct.Struct;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 class DataLogger extends GenericLogger {
     private DataLog log = DataLogManager.getLog();
@@ -34,8 +37,11 @@ class DataLogger extends GenericLogger {
         if (value == null) {return;}
         {%endif%}
 {%if t.TypeName == 'IntegerArray'%}
-        new {{t.java.EntryName}}LogEntry(log, entryName)
+        new NTIntegerArrayLogEntry(log, entryName)
             .append(toLongArray(value));
+{%elif t.TypeName == 'LongArray'%}
+        new NTIntegerArrayLogEntry(log, entryName)
+        .append(value);
 {%else%}
         new {{t.java.EntryName}}LogEntry(log, entryName).append(value);
 {%endif%}
@@ -45,9 +51,12 @@ class DataLogger extends GenericLogger {
     public void add{{t.TypeName}}(String entryName,
     {{t.java.Supplier}}valueSupplier,
     LogLevel level)
-    {
+    {   
+        {%if t.TypeName == 'IntegerArray' or t.TypeName == 'LongArray'%}
+        var entry = new NTIntegerArrayLogEntry(log, entryName);
+{%else %}
         var entry = new {{t.java.EntryName}}LogEntry(log, entryName);
-
+{%endif%}
         LongConsumer consumer;
 {%if t.TypeName == 'IntegerArray'%}
         if (this.isLazy()) {
@@ -60,7 +69,10 @@ class DataLogger extends GenericLogger {
                     var value = toLongArray(valueSupplier.get());
                     if (!(Arrays.equals(value, lastValue))) {
                         entry.append(value, timestamp);
-                        lastValue = value;
+                        if (lastValue.length != value.length) {
+                            lastValue = new long[value.length];
+                        }
+                        System.arraycopy(value, 0, lastValue, 0, value.length);
                     }
                 }
             };
@@ -92,7 +104,10 @@ class DataLogger extends GenericLogger {
                     if (!(Arrays.equals(value, lastValue))) {
     {%endif%}
                         entry.append(value, timestamp);
-                        lastValue = value;
+                        if (lastValue.length != value.length) {
+                            lastValue = new {{t.java.ComponentType}}[value.length];
+                        }
+                        System.arraycopy(value, 0, lastValue, 0, value.length);
                     }
                 }
             };
@@ -163,15 +178,19 @@ class DataLogger extends GenericLogger {
         NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), path, path);
     }
 
+
     @Override
     public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier, LogLevel level) {
-        var entry = StructLogEntry.create(log, entryName, struct);
-
         LongConsumer consumer;
 
         if (this.isLazy()) {
+            var entryHandle = log.start(entryName, struct.getTypeString(), "", 0);
+            log.addSchema(struct, 0);
+            int size = struct.getSize();
             consumer = new LongConsumer() {
-                private R lastValue = null;
+                private ByteBuffer value1 = ByteBuffer.allocate(size);
+                private ByteBuffer value2 = ByteBuffer.allocate(size);
+                boolean useValue1 = true; 
 
                 @Override
                 public void accept(long timestamp) {
@@ -179,13 +198,21 @@ class DataLogger extends GenericLogger {
                     if (value == null) {
                         return;
                     }
-                    if (!(value.equals(lastValue))) {
-                        entry.append(value, timestamp);
-                        lastValue = value;
+                    ByteBuffer cur = useValue1 ? value1 : value2;
+                    cur.position(0);
+                    struct.pack(cur, value);
+                    cur.position(0);
+                    // checks that the buffer segments written by the struct match.
+                    // ByteBuffer equality looks at the content after the position,
+                    // so both positions need to be 0 at this point.
+                    if (!(value1.equals(value2))) {
+                        log.appendRaw(entryHandle, cur, 0, size, timestamp);
+                        useValue1 = !useValue1;
                     }
                 }
             };
         } else {
+            var entry = StructLogEntry.create(log, entryName, struct);
             consumer = (timestamp) -> {
                 var value = valueSupplier.get();
                 if (value == null) {
@@ -203,27 +230,50 @@ class DataLogger extends GenericLogger {
 
     @Override
     public <R> void addStructArray(String entryName, Struct<R> struct, Supplier<R[]> valueSupplier, LogLevel level) {
-        var entry = StructArrayLogEntry.create(log, entryName, struct);
-
         LongConsumer consumer;
 
         if (this.isLazy()) {
+            var entryHandle = log.start(entryName, struct.getTypeString()+"[]", "", 0);
+            log.addSchema(struct, 0);
+            int size = struct.getSize();
             consumer = new LongConsumer() {
-                private R[] lastValue = null;
-
+                private ByteBuffer value1 = ByteBuffer.allocate(4 * size);
+                private ByteBuffer value2 = ByteBuffer.allocate(4 * size);
+                boolean useValue1 = true; 
+                int lastLength = 0;
                 @Override
                 public void accept(long timestamp) {
                     var value = valueSupplier.get();
                     if (value == null) {
                         return;
                     }
-                    if (!(Arrays.deepEquals(value, lastValue))) {
-                        entry.append(value, timestamp);
-                        lastValue = value;
+                    ByteBuffer cur = useValue1 ? value1 : value2;
+                    cur.position(0);
+                    if ((value.length * size) > cur.capacity()) {
+                      cur =
+                          ByteBuffer.allocateDirect(value.length * size * 2)
+                              .order(ByteOrder.LITTLE_ENDIAN);
+                    }
+                    for (R v : value) {
+                      struct.pack(cur, v);
+                    }
+                    cur.position(0);
+                    cur.limit(value.length * size);
+                    // checks that the buffer segments written by the struct match.
+                    // ByteBuffer equality looks at the content after the position and until the limit,
+                    // so both positions need to be 0 at this point.
+                    if (!(
+                        lastLength == value.length &&
+                        value1.equals(value2)
+                    )) {
+                        log.appendRaw(entryHandle, cur, 0, size, timestamp);
+                        useValue1 = !useValue1;
+                        lastLength = value.length;
                     }
                 }
             };
         } else {
+            var entry = StructArrayLogEntry.create(log, entryName, struct);
             consumer = (timestamp) -> {
                 var value = valueSupplier.get();
                 if (value == null) {

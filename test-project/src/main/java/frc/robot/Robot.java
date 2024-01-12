@@ -13,6 +13,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.BooleanEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.IntegerArrayLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.DriverStation.MatchType;
@@ -63,7 +66,8 @@ public class Robot extends TimedRobot implements Logged {
   @Log.NT private Field2d field = new Field2d();
 
   @Log.NT private Mechanism2d mech = new Mechanism2d(1, 1);
-  @Log.NT private long[] array = {0, 1, 2};
+  @Log.NT private int[] array = {0, 1, 2};
+  @Log.NT private int number = 0;
 
   BooleanEntry fileOnlyEntry = NetworkTableInstance.getDefault().getBooleanTopic("/fileOnly").getEntry(false);
 
@@ -75,6 +79,7 @@ public class Robot extends TimedRobot implements Logged {
   @Override
   public void robotInit() {
     fileOnlyEntry.set(false);
+    System.out.println("before first update");
   }
 
   @Override
@@ -95,6 +100,7 @@ public class Robot extends TimedRobot implements Logged {
       (Math.random()+0.55) * translation2d.getX(),
       (Math.random()+0.55) * translation2d.getY()
     );
+    //array[0] = samples;
   }
 
   @Override
@@ -113,7 +119,7 @@ public class Robot extends TimedRobot implements Logged {
 
   @Override
   public void teleopInit() {
-    array=null;
+
   }
 
   @Override
