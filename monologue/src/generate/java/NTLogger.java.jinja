@@ -88,29 +88,11 @@ class NTLogger extends GenericLogger {
 {%endif%}
         LongConsumer consumer;
 {%if t.TypeName == 'IntegerArray'%}
-        if (this.isLazy()) {
-            consumer = new LongConsumer() {
-                private long[] lastValue = new long[] {};
-                @Override
-                public void accept(long timestamp) {
-                    var intarr = valueSupplier.get();
-                    if (intarr == null) { return;}
-                    var value = toLongArray(valueSupplier.get());
-                    if (!(Arrays.equals(value, lastValue))) {
-                        entry.set(value, timestamp);
-                        lastValue = value;
-                    }
-
- 
-                }
-            };
-        } else {
-            consumer = (timestamp) -> {
-                var value = valueSupplier.get();
-                if (value == null) { return;}
-                entry.set(toLongArray(value), timestamp);
-            };
-        }
+        consumer = (timestamp) -> {
+            var value = valueSupplier.get();
+            if (value == null) { return;}
+            entry.set(toLongArray(value), timestamp);
+        };
 
         addField(
             entryName,
@@ -205,28 +187,11 @@ class NTLogger extends GenericLogger {
         var publisher = topic.publish();
 
         LongConsumer consumer;
-
-        if (this.isLazy()) {
-            consumer = new LongConsumer() {
-                private R lastValue = null;
-                @Override
-                public void accept(long timestamp) {
-                    
-                    var value = valueSupplier.get();
-                    if (value == null) { return;}
-                    if (!(value.equals(lastValue))) {
-                        publisher.set(value, timestamp);
-                        lastValue = value;
-                    }
-                }
-            };
-        } else {
-            consumer = (timestamp) -> {
-                var value = valueSupplier.get();
-                if (value == null) { return;}
-                publisher.set(value, timestamp);
-            };
-        }
+        consumer = (timestamp) -> {
+            var value = valueSupplier.get();
+            if (value == null) { return;}
+            publisher.set(value, timestamp);
+        };
 
         addField(
             entryName,
@@ -248,26 +213,11 @@ class NTLogger extends GenericLogger {
 
         LongConsumer consumer;
 
-        if (this.isLazy()) {
-            consumer = new LongConsumer() {
-                private R[] lastValue = null;
-                @Override
-                public void accept(long timestamp) {
-                    var value = (R[]) valueSupplier.get();
-                    if (value == null) {return;} 
-                    if (!(Arrays.deepEquals(value, lastValue))) {
-                        publisher.set(value, timestamp);
-                        lastValue = value;
-                    }
-                }
-            };
-        } else {
-            consumer = (timestamp) -> {
-                var value = valueSupplier.get();
-                if (value == null) {return;}
-                publisher.set(value, timestamp);
-            };
-        }
+        consumer = (timestamp) -> {
+            var value = valueSupplier.get();
+            if (value == null) {return;}
+            publisher.set(value, timestamp);
+        };
 
         addField(
             entryName,
