@@ -47,11 +47,29 @@
         "Translation2d##v_/Robot/structTest": {
           "open": true
         },
+        "Translation2d##v_/Robot/structTestDebug": {
+          "open": true
+        },
         "double[]##v_/Robot/array": {
           "open": true
         },
         "field": {
           "double[]##v_/Robot/field/Robot": {
+            "open": true
+          },
+          "open": true
+        },
+        "geometry": {
+          "Rotation2d##v_/Robot/geometry/getRotation2d": {
+            "open": true
+          },
+          "Rotation3d##v_/Robot/geometry/getRotation3d": {
+            "open": true
+          },
+          "Transform2d##v_/Robot/geometry/getTransform2d": {
+            "Translation2d##v_translation": {
+              "open": true
+            },
             "open": true
           },
           "open": true

@@ -73,7 +73,7 @@ public class Robot extends TimedRobot implements Logged {
 
   public Robot() {
     super();
-    Monologue.setupMonologue(this, "/Robot", true, false);
+    Monologue.setupMonologue(this, "/Robot", true, true);
   }
 
   @Override
