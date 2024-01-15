@@ -10,8 +10,8 @@
       "ConsumerFunctionPackage": "edu.wpi.first.util.function",
       "FunctionTypePrefix": "Boolean",
       "EntryName": "Boolean",
-      "SupplierGet" : "get",
-      "IsArray" : false
+      "SupplierGet": "get",
+      "IsArray": false
     }
   },
   {
@@ -24,11 +24,10 @@
       "EmptyValue": "0",
       "FunctionTypePrefix": "Integer",
       "EntryName": "Integer",
-      "SupplierGet" : "get",
-      "IsArray" : false
+      "SupplierGet": "get",
+      "IsArray": false
     }
   },
-
   {
     "TypeName": "Long",
     "TypeString": "\"int\"",
@@ -39,8 +38,8 @@
       "EmptyValue": "0",
       "FunctionTypePrefix": "Long",
       "EntryName": "Integer",
-      "SupplierGet" : "get",
-      "IsArray" : false
+      "SupplierGet": "get",
+      "IsArray": false
     }
   },
   {
@@ -55,8 +54,8 @@
       "SupplierFunctionPackage": "edu.wpi.first.util.function",
       "FunctionTypePrefix": "Float",
       "EntryName": "Float",
-      "SupplierGet" : "get",
-      "IsArray" : false
+      "SupplierGet": "get",
+      "IsArray": false
     }
   },
   {
@@ -69,22 +68,21 @@
       "EmptyValue": "0",
       "FunctionTypePrefix": "Double",
       "EntryName": "Double",
-      "SupplierGet" : "get",
-      "IsArray" : false
+      "SupplierGet": "get",
+      "IsArray": false
     }
   },
   {
     "TypeName": "String",
     "TypeString": "\"string\"",
-
     "java": {
       "ValueType": "String",
       "Supplier": "Supplier<String>",
       "EmptyValue": "\"\"",
       "FunctionTypeSuffix": "<String>",
       "EntryName": "String",
-      "SupplierGet" : "get",
-      "IsArray" : false
+      "SupplierGet": "get",
+      "IsArray": false
     }
   },
   {
@@ -96,8 +94,8 @@
       "EmptyValue": "new byte[] {}",
       "FunctionTypeSuffix": "<byte[]>",
       "EntryName": "Raw",
-      "SupplierGet" : "get",
-      "IsArray" : true,
+      "SupplierGet": "get",
+      "IsArray": true,
       "ComponentType": "byte"
     }
   },
@@ -111,8 +109,8 @@
       "EmptyValue": "new boolean[] {}",
       "FunctionTypeSuffix": "<boolean[]>",
       "EntryName": "BooleanArray",
-      "SupplierGet" : "get",
-      "IsArray" : true,
+      "SupplierGet": "get",
+      "IsArray": true,
       "ComponentType": "boolean"
     }
   },
@@ -126,8 +124,8 @@
       "EmptyValue": "new int[] {}",
       "FunctionTypeSuffix": "<int[]>",
       "EntryName": "IntegerArray",
-      "SupplierGet" : "get",
-      "IsArray" : true,
+      "SupplierGet": "get",
+      "IsArray": true,
       "ComponentType": "int"
     }
   },
@@ -141,9 +139,9 @@
       "EmptyValue": "new long[] {}",
       "FunctionTypeSuffix": "<long[]>",
       "EntryName": "IntegerArray",
-      "SupplierGet" : "get",
-      "IsArray" : true,
-      "ComponentType" : "long"
+      "SupplierGet": "get",
+      "IsArray": true,
+      "ComponentType": "long"
     }
   },
   {
@@ -156,8 +154,8 @@
       "EmptyValue": "new float[] {}",
       "FunctionTypeSuffix": "<float[]>",
       "EntryName": "FloatArray",
-      "SupplierGet" : "get",
-      "IsArray" : true,
+      "SupplierGet": "get",
+      "IsArray": true,
       "ComponentType": "float"
     }
   },
@@ -171,8 +169,8 @@
       "EmptyValue": "new double[] {}",
       "FunctionTypeSuffix": "<double[]>",
       "EntryName": "DoubleArray",
-      "SupplierGet" : "get",
-      "IsArray" : true,
+      "SupplierGet": "get",
+      "IsArray": true,
       "ComponentType": "double"
     }
   },
@@ -185,8 +183,8 @@
       "EmptyValue": "new String[] {}",
       "FunctionTypeSuffix": "<String[]>",
       "EntryName": "StringArray",
-      "SupplierGet" : "get",
-      "IsArray" : true,
+      "SupplierGet": "get",
+      "IsArray": true,
       "ComponentType": "String"
     }
   }

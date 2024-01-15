@@ -10,7 +10,7 @@ class LogPath {
 
   /**
    * Uses raw array indexing so can be unsafe
-   * 
+   *
    * @param index the index of the path to get
    * @return the path at the given index
    */
@@ -53,11 +53,9 @@ class LogPath {
   public boolean equals(Object obj) {
     if (obj instanceof LogPath) {
       LogPath other = (LogPath) obj;
-      if (other.len() != len())
-        return false;
+      if (other.len() != len()) return false;
       for (int i = 0; i < len(); i++) {
-        if (!other.get(i).equals(get(i)))
-          return false;
+        if (!other.get(i).equals(get(i))) return false;
       }
       return true;
     }
@@ -74,10 +72,8 @@ class LogPath {
   }
 
   public static LogPath from(String path) {
-    while (path.startsWith("/"))
-      path = path.substring(1);
-    while (path.endsWith("/"))
-      path = path.substring(0, path.length() - 1);
+    while (path.startsWith("/")) path = path.substring(1);
+    while (path.endsWith("/")) path = path.substring(0, path.length() - 1);
     return new LogPath(path.split("/"));
   }
 }
