@@ -1,5 +1,7 @@
 package monologue;
 
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DataLogManager;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -7,15 +9,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.WeakHashMap;
 
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.DataLogManager;
-
 public class Monologue {
 
-  /**
-   * The Monologue library wide FILE_ONLY flag,
-   * is used to filter logging behavior
-   */
+  /** The Monologue library wide FILE_ONLY flag, is used to filter logging behavior */
   private static boolean FILE_ONLY = true;
 
   private static boolean HAS_SETUP_BEEN_CALLED = false;
@@ -25,23 +21,21 @@ public class Monologue {
   static final WeakHashMap<Logged, String> loggedRegistry = new WeakHashMap<Logged, String>();
 
   /**
-   * Is the main entry point for the monologue library.
-   * It will interate over every member of the provided Logged object and
-   * evaluated if it should be logged to the network tables or to a file.
-   * 
-   * Will also recursively check field values for classes that implement Logged
-   * and log those as well.
-   * 
+   * Is the main entry point for the monologue library. It will interate over every member of the
+   * provided Logged object and evaluated if it should be logged to the network tables or to a file.
+   *
+   * <p>Will also recursively check field values for classes that implement Logged and log those as
+   * well.
+   *
    * @param loggable the root Logged object to log
    * @param rootpath the root path to log to
    * @param fileOnly the FILE_ONLY flag for the monologue library
    * @param lazyLogging if true, will only log when the value changes
-   * 
-   * @apiNote Should only be called once, if another {@link Logged} tree needs to
-   *          be created
-   *          use {@link #logObj(Logged, String)} for additional trees
+   * @apiNote Should only be called once, if another {@link Logged} tree needs to be created use
+   *     {@link #logObj(Logged, String)} for additional trees
    */
-  public static void setupMonologue(Logged loggable, String rootpath, boolean fileOnly, boolean lazyLogging) {
+  public static void setupMonologue(
+      Logged loggable, String rootpath, boolean fileOnly, boolean lazyLogging) {
     if (HAS_SETUP_BEEN_CALLED) {
       throw new IllegalStateException("Monologue.setupMonologue() has already been called");
     }
@@ -50,15 +44,14 @@ public class Monologue {
       rootpath = "/" + rootpath;
     }
     MonologueLog.RuntimeLog(
-      "Monologue.setupMonologue() called on "
-      + loggable.getClass().getName()
-      + " with rootpath "
-      + rootpath
-      + " and fileOnly "
-      + fileOnly
-      + " and lazyLogging "
-      + lazyLogging
-    );
+        "Monologue.setupMonologue() called on "
+            + loggable.getClass().getName()
+            + " with rootpath "
+            + rootpath
+            + " and fileOnly "
+            + fileOnly
+            + " and lazyLogging "
+            + lazyLogging);
 
     FILE_ONLY = fileOnly;
     ntLogger.setLazy(lazyLogging);
@@ -70,15 +63,14 @@ public class Monologue {
   }
 
   /**
-   * Will interate over every element of the provided {@link Logged} object and
-   * handle the data transmission from there.
-   * 
-   * Will also recursively check field values for classes that implement
-   * {@link Logged}
-   * and log those as well.
-   * 
+   * Will interate over every element of the provided {@link Logged} object and handle the data
+   * transmission from there.
+   *
+   * <p>Will also recursively check field values for classes that implement {@link Logged} and log
+   * those as well.
+   *
    * @param loggable the obj to scrape
-   * @param path     the path to log to
+   * @param path the path to log to
    */
   public static void logObj(Logged loggable, String path) {
     var lpath = LogPath.from(path);
@@ -87,7 +79,8 @@ public class Monologue {
     } else if (lpath.isRoot()) {
       throw new IllegalArgumentException("Root path of / is not allowed");
     }
-    MonologueLog.RuntimeLog("Monologue.logObj() called on " + loggable.getClass().getName() + " with path " + path);
+    MonologueLog.RuntimeLog(
+        "Monologue.logObj() called on " + loggable.getClass().getName() + " with path " + path);
 
     loggedRegistry.put(loggable, path);
 
@@ -101,7 +94,7 @@ public class Monologue {
 
   /**
    * Updates all the loggers, ideally called every cycle.
-   * 
+   *
    * @apiNote Should only be called on the same thread monologue was setup on
    */
   public static void updateAll() {
