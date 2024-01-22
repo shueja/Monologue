@@ -14,7 +14,7 @@ plugins {
     id "maven-publish"
     id "java-library"
     id "edu.wpi.first.GradleRIO" version "2024.1.1"
-    id 'com.diffplug.spotless' version '6.21.0' apply false
+    id 'com.diffplug.spotless' version '6.20.0'
 }
 
 
@@ -116,6 +116,8 @@ task monologueGenerateClasses() {
 
 sourceSets.main.java.srcDir "${buildDir}/generated/main/java"
 compileJava.dependsOn(monologueGenerateClasses)
+
+project.compileJava.dependsOn(spotlessApply)
 
 allprojects {
     apply from: "$rootProject.projectDir/format.gradle"
