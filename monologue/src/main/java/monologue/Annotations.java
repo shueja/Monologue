@@ -8,7 +8,50 @@ import java.lang.annotation.Target;
 
 public class Annotations {
 
+  /**
+   * Logs the annotated field/method to NetworkTables if inside a {@link Logged}
+   * class.
+   * 
+   * @param key   [optional] the key to log the variable as. If empty, the key
+   *              will be the name of the field/method
+   * @param level [optional] the log level to use
+   */
+  @Documented
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ ElementType.FIELD, ElementType.METHOD })
   public @interface Log {
+
+          /**
+       * The relative path to log to. If empty, the path will be the name of the
+       * field/method.
+       */
+      public String key() default "";
+
+      /**
+       * The log level to use.
+       * 
+       * @apiNote WPILIB Senders do not obey these levels as of now
+       */
+      public LogLevel level() default LogLevel.DEFAULT;
+
+      /**
+       * Logs the annotated field/method to NetworkTables if inside a {@link Logged}
+       * class.
+       * 
+       * @param key   [optional] the key to log the variable as. If empty, the key
+       *              will be the name of the field/method
+       */
+      @Documented
+      @Retention(RetentionPolicy.RUNTIME)
+      @Target({ ElementType.FIELD, ElementType.METHOD })
+      public @interface Once {
+        /**
+         * The relative path to log to. If empty, the path will be the name of the
+         * field/method.
+         */
+        public String key() default "";
+      }
+
     /**
      * Logs the annotated field/method to WPILOG if inside a {@link Logged} class.
      * 

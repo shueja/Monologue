@@ -3,24 +3,24 @@ package frc.robot.inheritance;
 import monologue.Annotations.*;
 
 public abstract class GrandParent {
-    @Log.NT
+    @Log
     public Boolean grandparentPublicTrue = true;
-    @Log.NT
+    @Log
     private Boolean grandparentPrivateTrue = true;
-    @Log.NT
+    @Log
     protected Boolean grandparentProtectedTrue = true;
 
-    @Log.NT
+    @Log
     public Double grandparentPublicRand() {
         return Math.random();
     }
 
-    @Log.NT
+    @Log
     private Double grandparentPrivateRand() {
         return Math.random();
     }
 
-    @Log.NT
+    @Log
     protected Double grandparentProtectedRand() {
         return Math.random();
     }
