@@ -17,6 +17,9 @@ plugins {
     id 'com.diffplug.spotless' version '6.20.0'
 }
 
+java {
+    withSourcesJar()
+}
 
 publishing {
     publications {
@@ -118,7 +121,7 @@ sourceSets.main.java.srcDir "${buildDir}/generated/main/java"
 compileJava.dependsOn(monologueGenerateClasses)
 project.compileJava.dependsOn(spotlessApply)
 
-
+sourcesJar.dependsOn(compileJava)
 project.compileJava.dependsOn(spotlessApply)
 
 allprojects {
