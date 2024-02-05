@@ -1,12 +1,11 @@
 package monologue;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.function.Supplier;
-
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.DriverStation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.function.Supplier;
 import monologue.EvalAnno.LogMetadata;
 import monologue.EvalAnno.LogType;
 
@@ -17,7 +16,8 @@ class EvalMethod {
       try {
         return method.invoke(loggable);
       } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-        DriverStation.reportWarning(method.getName() + " supllier is erroring: " + e.toString(), false);
+        DriverStation.reportWarning(
+            method.getName() + " supllier is erroring: " + e.toString(), false);
         return null;
       }
     };
@@ -50,14 +50,25 @@ class EvalMethod {
     try {
       type = method.getReturnType();
     } catch (IllegalArgumentException e) {
-      MonologueLog
-          .RuntimeWarn("Tried to log invalid type " + name + " -> " + method.getReturnType() + " in " + rootPath);
+      MonologueLog.RuntimeWarn(
+          "Tried to log invalid type "
+              + name
+              + " -> "
+              + method.getReturnType()
+              + " in "
+              + rootPath);
       return;
     }
 
     if (type.isAssignableFrom(NTSendable.class) || type.isAssignableFrom(Sendable.class)) {
-      MonologueLog.RuntimeWarn("Tried to log invalid type " + name + " -> " + method.getReturnType() + " in " + rootPath
-          + ": Sendable isn't supported yet for methods");
+      MonologueLog.RuntimeWarn(
+          "Tried to log invalid type "
+              + name
+              + " -> "
+              + method.getReturnType()
+              + " in "
+              + rootPath
+              + ": Sendable isn't supported yet for methods");
       return;
     }
 
@@ -67,27 +78,24 @@ class EvalMethod {
           method.getReturnType(),
           getSupplier(method, loggable),
           logMetadata.level,
-          logMetadata.once
-      );
+          logMetadata.once);
     } else if (logType == LogType.Nt) {
       Monologue.ntLogger.addSupplier(
           path,
           method.getReturnType(),
           getSupplier(method, loggable),
           logMetadata.level,
-          logMetadata.once
-      );
+          logMetadata.once);
       if (logMetadata.level == LogLevel.DEFAULT && !logMetadata.once) {
         // The data *could* need to only go to datalog if its default log level,
         // register a supplier for dataLogger that can pickup the logging when the nt
         // one is deactivated by changing the FILE_ONLY flag
         Monologue.dataLogger.addSupplier(
-          path,
-          method.getReturnType(),
-          getSupplier(method, loggable),
-          logMetadata.level,
-          logMetadata.once
-      );
+            path,
+            method.getReturnType(),
+            getSupplier(method, loggable),
+            logMetadata.level,
+            logMetadata.once);
       }
     }
   }
