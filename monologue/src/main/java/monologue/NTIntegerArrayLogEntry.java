@@ -7,11 +7,11 @@ package monologue;
 import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.DataLogEntry;
 
-/** Log array of integer values. 
- * The datatype matches NT instead of DataLog spec
- *  to avoid type mismatches when NT-logging to this key.
- * This gets around https://github.com/wpilibsuite/allwpilib/issues/6203
-*/
+/**
+ * Log array of integer values. The datatype matches NT instead of DataLog spec to avoid type
+ * mismatches when NT-logging to this key. This gets around
+ * https://github.com/wpilibsuite/allwpilib/issues/6203
+ */
 public class NTIntegerArrayLogEntry extends DataLogEntry {
   /** The data type for integer array values. */
   public static final String kDataType = "int[]";

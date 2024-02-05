@@ -117,6 +117,8 @@ task monologueGenerateClasses() {
 sourceSets.main.java.srcDir "${buildDir}/generated/main/java"
 compileJava.dependsOn(monologueGenerateClasses)
 
+project.compileJava.dependsOn(spotlessApply)
+
 allprojects {
     apply from: "$rootProject.projectDir/format.gradle"
 }

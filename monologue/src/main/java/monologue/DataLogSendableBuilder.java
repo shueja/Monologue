@@ -247,56 +247,56 @@ class DataLogSendableBuilder implements NTSendableBuilder {
 
   @Override
   public void publishConstBoolean(String key, boolean value) {
-    new BooleanLogEntry(log, prefix+key).append(value);
+    new BooleanLogEntry(log, prefix + key).append(value);
   }
 
   @Override
   public void publishConstInteger(String key, long value) {
-    new IntegerLogEntry(log, prefix+key).append(value);
+    new IntegerLogEntry(log, prefix + key).append(value);
   }
 
   @Override
   public void publishConstFloat(String key, float value) {
-    new FloatLogEntry(log, prefix+key).append(value);
+    new FloatLogEntry(log, prefix + key).append(value);
   }
 
   @Override
   public void publishConstDouble(String key, double value) {
-    new DoubleLogEntry(log, prefix+key).append(value);
+    new DoubleLogEntry(log, prefix + key).append(value);
   }
 
   @Override
   public void publishConstString(String key, String value) {
-    new StringLogEntry(log, prefix+key).append(value);
+    new StringLogEntry(log, prefix + key).append(value);
   }
 
   @Override
   public void publishConstBooleanArray(String key, boolean[] value) {
-    new BooleanArrayLogEntry(log, prefix+key).append(value);
+    new BooleanArrayLogEntry(log, prefix + key).append(value);
   }
 
   @Override
   public void publishConstIntegerArray(String key, long[] value) {
-    new IntegerArrayLogEntry(log, prefix+key).append(value);
+    new IntegerArrayLogEntry(log, prefix + key).append(value);
   }
 
   @Override
   public void publishConstFloatArray(String key, float[] value) {
-    new FloatArrayLogEntry(log, prefix+key).append(value);
+    new FloatArrayLogEntry(log, prefix + key).append(value);
   }
 
   @Override
   public void publishConstDoubleArray(String key, double[] value) {
-    new DoubleArrayLogEntry(log, prefix+key).append(value);
+    new DoubleArrayLogEntry(log, prefix + key).append(value);
   }
 
   @Override
   public void publishConstStringArray(String key, String[] value) {
-    new StringArrayLogEntry(log, prefix+key).append(value); 
+    new StringArrayLogEntry(log, prefix + key).append(value);
   }
 
   @Override
   public void publishConstRaw(String key, String typeString, byte[] value) {
-    new RawLogEntry(log, prefix+key).append(value);
+    new RawLogEntry(log, prefix + key).append(value);
   }
 }
