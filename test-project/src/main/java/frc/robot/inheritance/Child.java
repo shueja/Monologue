@@ -3,24 +3,24 @@ package frc.robot.inheritance;
 import monologue.Annotations.*;
 
 public class Child extends Parent {
-    @Log.NT
+    @Log
     public Boolean childPublicTrue = true;
-    @Log.NT
+    @Log
     private Boolean childPrivateTrue = true;
-    @Log.NT
+    @Log
     protected Boolean childProtectedTrue = true;
 
-    @Log.NT
+    @Log
     public Double childPublicRand() {
         return Math.random();
     }
 
-    @Log.NT
+    @Log
     private Double childPrivateRand() {
         return Math.random();
     }
 
-    @Log.NT
+    @Log
     protected Double childProtectedRand() {
         return Math.random();
     }

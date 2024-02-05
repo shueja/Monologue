@@ -9,12 +9,12 @@ import monologue.Logged;
 
 public class Internal implements Logged {
 
-  @Log.NT
+  @Log
   static Boolean staticBool = true;
 
-  @Log.NT
+  @Log
   SwerveModuleState state = new SwerveModuleState(1, new Rotation2d(0.5));
-  @Log.NT
+  @Log
   ArmFeedforward ff = new ArmFeedforward(1, 2, 3, 4);
   ArmFeedforward ff2 = new ArmFeedforward(4, 3, 2, 1);
   private int calls = 0;
@@ -30,7 +30,7 @@ public class Internal implements Logged {
     return name;
   }
 
-  @Log.NT
+  @Log
   public double getNumber() {
     calls++;
     if (calls == 500) {
