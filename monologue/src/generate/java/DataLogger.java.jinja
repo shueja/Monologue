@@ -37,13 +37,13 @@ class DataLogger extends GenericLogger {
         if (value == null) {return;}
         {%endif%}
 {%if t.TypeName == 'IntegerArray'%}
-        new NTIntegerArrayLogEntry(log, entryName)
+        new NTIntegerArrayLogEntry(log, "NT:" + entryName)
             .append(toLongArray(value));
 {%elif t.TypeName == 'LongArray'%}
-        new NTIntegerArrayLogEntry(log, entryName)
+        new NTIntegerArrayLogEntry(log, "NT:" + entryName)
         .append(value);
 {%else%}
-        new {{t.java.EntryName}}LogEntry(log, entryName).append(value);
+        new {{t.java.EntryName}}LogEntry(log, "NT:" + entryName).append(value);
 {%endif%}
     }
 
@@ -53,9 +53,9 @@ class DataLogger extends GenericLogger {
     LogLevel level)
     {   
         {%if t.TypeName == 'IntegerArray' or t.TypeName == 'LongArray'%}
-        var entry = new NTIntegerArrayLogEntry(log, entryName);
+        var entry = new NTIntegerArrayLogEntry(log, "NT:" + entryName);
 {%else %}
-        var entry = new {{t.java.EntryName}}LogEntry(log, entryName);
+        var entry = new {{t.java.EntryName}}LogEntry(log, "NT:" + entryName);
 {%endif%}
         LongConsumer consumer;
 {%if t.TypeName == 'IntegerArray'%}
@@ -178,7 +178,7 @@ class DataLogger extends GenericLogger {
         builder.startListeners();
         table.getEntry(".controllable").setBoolean(false);
         sendables.add(builder);
-        NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), path, path);
+        NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), path, "NT:" + path);
     }
 
 
@@ -187,7 +187,7 @@ class DataLogger extends GenericLogger {
         LongConsumer consumer;
 
         if (this.isLazy()) {
-            var entryHandle = log.start(entryName, struct.getTypeString(), "", 0);
+            var entryHandle = log.start("NT:" + entryName, struct.getTypeString(), "", 0);
             log.addSchema(struct, 0);
             int size = struct.getSize();
             consumer = new LongConsumer() {
@@ -215,7 +215,7 @@ class DataLogger extends GenericLogger {
                 }
             };
         } else {
-            var entry = StructLogEntry.create(log, entryName, struct);
+            var entry = StructLogEntry.create(log, "NT:" + entryName, struct);
             consumer = (timestamp) -> {
                 var value = valueSupplier.get();
                 if (value == null) {
@@ -236,7 +236,7 @@ class DataLogger extends GenericLogger {
         LongConsumer consumer;
 
         if (this.isLazy()) {
-            var entryHandle = log.start(entryName, struct.getTypeString()+"[]", "", 0);
+            var entryHandle = log.start("NT:" + entryName, struct.getTypeString()+"[]", "", 0);
             log.addSchema(struct, 0);
             int size = struct.getSize();
             consumer = new LongConsumer() {
@@ -276,7 +276,7 @@ class DataLogger extends GenericLogger {
                 }
             };
         } else {
-            var entry = StructArrayLogEntry.create(log, entryName, struct);
+            var entry = StructArrayLogEntry.create(log, "NT:" + entryName, struct);
             consumer = (timestamp) -> {
                 var value = valueSupplier.get();
                 if (value == null) {
@@ -301,7 +301,7 @@ class DataLogger extends GenericLogger {
             return;
         }
 
-        StructLogEntry.create(log, entryName, struct).append(value);
+        StructLogEntry.create(log, "NT:" + entryName, struct).append(value);
     }
 
     @Override
@@ -312,7 +312,7 @@ class DataLogger extends GenericLogger {
         if (value == null) {
             return;
         }
-        StructArrayLogEntry.create(log, entryName, struct).append(value);
+        StructArrayLogEntry.create(log, "NT:" + entryName, struct).append(value);
     }
 
     @Override
