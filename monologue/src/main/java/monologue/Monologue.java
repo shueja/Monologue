@@ -56,7 +56,7 @@ public class Monologue {
     FILE_ONLY = fileOnly;
     ntLogger.setLazy(lazyLogging);
     dataLogger.setLazy(lazyLogging);
-    NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), "", "");
+    NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), "", "NT:");
     logObj(loggable, rootpath);
 
     MonologueLog.RuntimeLog("Monologue.setupMonologue() finished");
