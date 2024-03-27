@@ -1,0 +1,31 @@
+package monologue;
+
+import edu.wpi.first.util.struct.StructSerializable;
+
+public class MonoDashboard {
+
+{%for t in types%}
+    public static void put(String entryName, {{t.java.ValueType}} value) {
+        put(entryName, value, LogLevel.DEFAULT);
+    }
+    public static void put(String entryName, {{t.java.ValueType}} value, LogLevel level) {
+        Monologue.ntLogger.put(entryName, value, level);
+    }
+{%endfor%}
+
+    public static <R extends StructSerializable> void put(String entryName, R value) {
+        put(entryName, value, LogLevel.DEFAULT);
+    }
+
+    public static <R extends StructSerializable> void put(String entryName, R value, LogLevel level) {
+        Monologue.ntLogger.put(entryName, value, level);
+    }
+
+    public static <R extends StructSerializable> void put(String entryName, R[] value) {
+        put(entryName, value, LogLevel.DEFAULT);
+    }
+
+    public static <R extends StructSerializable> void put(String entryName, R[] value, LogLevel level) {
+        Monologue.ntLogger.put(entryName, value, level);
+    }
+}

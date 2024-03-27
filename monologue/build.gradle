@@ -103,8 +103,8 @@ task monologueGenerateClasses() {
             if (file.name.startsWith("NTLogger")
                     || file.name.startsWith("DataLogger")
                     || file.name.startsWith("GenericLogger")
-                    || file.name.startsWith("DataType")
-                    || file.name.startsWith("Logged")) {
+                    || file.name.startsWith("Logged")
+                    || file.name.startsWith("MonoDashboard")) {
                 def replacements = new HashMap<String,?>()
                 replacements.put("types", jsonTypes)
                 def output = jinjava.render(template, replacements)
