@@ -1,5 +1,8 @@
 package monologue;
 
+
+import java.util.function.*;
+import edu.wpi.first.util.function.FloatSupplier;
 import edu.wpi.first.util.struct.StructSerializable;
 
 public interface Logged {
@@ -8,6 +11,46 @@ public interface Logged {
   }
   public default String getFullPath() {
     return Monologue.loggedRegistry.getOrDefault(this, "notfound");
+  }
+
+  public default void addLoggingSupplier(String key, DoubleSupplier value) {
+    Monologue.ntLogger.addDouble(key,()->value.getAsDouble());
+  }
+
+  public default void addLoggingSupplier(String key, DoubleSupplier value, LogLevel level) {
+    Monologue.ntLogger.addDouble(key,()->value.getAsDouble(), level);
+  }
+
+  public default void addLoggingSupplier(String key, IntSupplier value) {
+    Monologue.ntLogger.addInteger(key,()->value.getAsInt());
+  }
+
+  public default void addLoggingSupplier(String key, IntSupplier value, LogLevel level) {
+    Monologue.ntLogger.addInteger(key,()->value.getAsInt(), level);
+  }
+
+  public default void addLoggingSupplier(String key, BooleanSupplier value) {
+    Monologue.ntLogger.addBoolean(key,()->value.getAsBoolean());
+  }
+
+  public default void addLoggingSupplier(String key, BooleanSupplier value, LogLevel level) {
+    Monologue.ntLogger.addBoolean(key,()->value.getAsBoolean(), level);
+  }
+  
+  public default void addLoggingSupplier(String key, FloatSupplier value) {
+    Monologue.ntLogger.addFloat(key,()->value.getAsFloat());
+  }
+
+  public default void addLoggingSupplier(String key, FloatSupplier value, LogLevel level) {
+    Monologue.ntLogger.addFloat(key,()->value.getAsFloat(), level);
+  }
+
+  public default void addLoggingSupplier(String key, LongSupplier value) {
+    Monologue.ntLogger.addLong(key,()->value.getAsLong());
+  }
+
+  public default void addLoggingSupplier(String key, LongSupplier value, LogLevel level) {
+    Monologue.ntLogger.addLong(key,()->value.getAsLong(), level);
   }
 {%for t in types%}
   public default void log(String key, {{t.java.ValueType}} value) {

@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.DriverStation.MatchType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.inheritance.Child;
 
 import static monologue.LogLevel.*;
@@ -30,6 +31,7 @@ import java.util.List;
 
 
 public class Robot extends TimedRobot implements Logged {
+  private CommandXboxController controller = new CommandXboxController(0);
   @Log.Once private boolean flippingBool = false;
   private int samples = 0;
   @Log(level = NOT_FILE_ONLY) int debugSamples = 0;
@@ -74,6 +76,9 @@ public class Robot extends TimedRobot implements Logged {
   public Robot() {
     super();
     Monologue.setupMonologue(this, "/Robot", true, false);
+    addLoggingSupplier("boolSup", fileOnlyEntry);
+    addLoggingSupplier("a", controller.a());
+    addLoggingSupplier("leftX", controller::getLeftX);
   }
 
   @Override
