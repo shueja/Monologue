@@ -1,5 +1,6 @@
 package monologue;
 
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -143,9 +144,8 @@ public class Monologue {
     }
     Monologue.config = config;
     HAS_SETUP_BEEN_CALLED = true;
-    if (!rootpath.startsWith("/")) {
-      rootpath = "/" + rootpath;
-    }
+    rootpath = NetworkTable.normalizeKey(rootpath, true);
+    MonoDashboard.setRootPath(rootpath);
     MonologueLog.runtimeLog(
         "Monologue.setupMonologue() called on "
             + loggable.getClass().getName()
