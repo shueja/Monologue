@@ -29,8 +29,10 @@ publishing {
     }
 }
 
-sourceCompatibility = JavaVersion.VERSION_11
-targetCompatibility = JavaVersion.VERSION_11
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
 
 // Set to true to use debug for JNI.
 wpi.java.debugJni = false
@@ -116,8 +118,6 @@ task monologueGenerateClasses() {
 
 sourceSets.main.java.srcDir "${buildDir}/generated/main/java"
 compileJava.dependsOn(monologueGenerateClasses)
-project.compileJava.dependsOn(spotlessApply)
-
 
 project.compileJava.dependsOn(spotlessApply)
 

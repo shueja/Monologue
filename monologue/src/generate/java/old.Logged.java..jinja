@@ -3,18 +3,11 @@ package monologue;
 import edu.wpi.first.util.struct.StructSerializable;
 
 public interface Logged {
-  static String getFullPath(Logged logged) {
-    return Monologue.loggedRegistry.getOrDefault(logged, "notfound");
-  }
-
-  /**
-   * Normally the name of {@code this} in the object tree is based fo the field in the object the reference is stored in.
-   * Overriding this method allows you to specify a different name for the object in the object tree.
-   *
-   * @return The name of the object in the object tree.
-   */
-  public default String getOverrideName() {
+  public default String getPath() {
     return "";
+  }
+  public default String getFullPath() {
+    return Monologue.loggedRegistry.getOrDefault(this, "notfound");
   }
 {%for t in types%}
   /**
@@ -38,7 +31,7 @@ public interface Logged {
    */
   public default void log(String key, {{t.java.ValueType}} value, LogLevel level) {
     if (!Monologue.isMonologueReady(key) || Monologue.isMonologueDisabled()) return;
-    Monologue.ntLogger.put(getFullPath(this) + "/" + key, value, level);
+    Monologue.ntLogger.put(getFullPath() + "/" + key, value, level);
   }
 {%endfor%}
   /**
@@ -62,7 +55,7 @@ public interface Logged {
    */
   public default <R extends StructSerializable> void log(String key, R value, LogLevel level) {
     if (!Monologue.isMonologueReady(key) || Monologue.isMonologueDisabled()) return;
-    Monologue.ntLogger.put(getFullPath(this) + "/" + key, value, level);
+    Monologue.ntLogger.put(getFullPath() + "/" + key, value, level);
   }
 
   /**
@@ -86,6 +79,6 @@ public interface Logged {
    */
   public default <R extends StructSerializable> void log(String key, R[] value, LogLevel level) {
     if (!Monologue.isMonologueReady(key) || Monologue.isMonologueDisabled()) return;
-    Monologue.ntLogger.put(getFullPath(this) + "/" + key, value, level);
+    Monologue.ntLogger.put(getFullPath() + "/" + key, value, level);
   }
 }

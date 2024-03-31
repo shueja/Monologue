@@ -5,7 +5,7 @@ spotless {
     enforceCheck = false
     java {
         target fileTree('.') {
-            include '**/*.java'
+            include '**/*.java', '**/build/generated/**'
             exclude '**/build/**', '**/build-*/**', '**/bin/**'
         }
         toggleOffOn()

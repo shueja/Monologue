@@ -1,12 +1,23 @@
 package monologue;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+@SuppressWarnings("unchecked")
 public class Annotations {
+  static final Class<? extends Annotation>[] ALL_ANNOTATIONS =
+      new Class[] {
+        Log.class,
+        Log.Once.class,
+        Log.File.class,
+        Log.File.Once.class,
+        Log.NT.class,
+        Log.NT.Once.class
+      };
 
   /**
    * Logs the annotated field/method to NetworkTables if inside a {@link Logged} class.

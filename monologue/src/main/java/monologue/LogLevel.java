@@ -11,6 +11,13 @@ public enum LogLevel {
   /** Always logs with same behavior independent of <code>FILE_ONLY</code> flag */
   OVERRIDE_FILE_ONLY;
 
+  /**
+   * Whether or not to log under the current library/logger flags
+   *
+   * @param fileOnly If the library is in fileOnly mode
+   * @param nt If the logger asking is the nt logger
+   * @return
+   */
   boolean shouldLog(boolean fileOnly, boolean nt) {
     switch (this) {
       case OVERRIDE_FILE_ONLY:

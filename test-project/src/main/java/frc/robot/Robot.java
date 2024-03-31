@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import monologue.LogLevel;
 import monologue.Logged;
 import monologue.Monologue;
 import monologue.Annotations.*;
@@ -13,16 +14,12 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.BooleanEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.util.datalog.DataLog;
-import edu.wpi.first.util.datalog.IntegerArrayLogEntry;
-import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.DriverStation.MatchType;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import frc.robot.inheritance.Child;
 
+import static monologue.Monologue.MonologueConfig;
 import static monologue.LogLevel.*;
 
 import java.util.ArrayList;
@@ -35,6 +32,10 @@ public class Robot extends TimedRobot implements Logged {
   @Log(level = NOT_FILE_ONLY) int debugSamples = 0;
   @Log(level = DEFAULT) int lowbandwidthSamples = 0;
   @Log(level = OVERRIDE_FILE_ONLY) int compSamples = 0;
+
+  @Log LogLevel logLevel = LogLevel.DEFAULT;
+
+  @Log Unloggable unloggable = new Unloggable();
 
   ArrayList<Internal> internals = new ArrayList<>(List.of(
     new Internal(""),
@@ -62,18 +63,25 @@ public class Robot extends TimedRobot implements Logged {
 
   private Translation2d translation2d = new Translation2d(1.0, 2.0);
 
-
   @Log private Field2d field = new Field2d();
 
   @Log private Mechanism2d mech = new Mechanism2d(1, 1);
-  @Log private int[] array = {0, 1, 2};
-  @Log private int number = 0;
+  @Log.NT private int[] array = {0, 1, 2};
+  @Log.File private int number = 0;
+  @Log.File.Once String onceFile = "test";
 
   BooleanEntry fileOnlyEntry = NetworkTableInstance.getDefault().getBooleanTopic("/fileOnly").getEntry(false);
 
   public Robot() {
     super();
-    Monologue.setupMonologue(this, "/Robot", true, false);
+    Monologue.setupMonologue(
+      this,
+      "/Robot",
+      new MonologueConfig()
+        .withDatalogPrefix("")
+        .withFileOnly(fileOnlyEntry::get)
+        .withLazyLogging(true)
+    );
   }
 
   @Override
@@ -84,7 +92,6 @@ public class Robot extends TimedRobot implements Logged {
 
   @Override
   public void robotPeriodic() {
-    Monologue.setFileOnly(fileOnlyEntry.get());
     Monologue.updateAll();
     field.getRobotObject().setPose(new Pose2d(samples / 100.0, 0, new Rotation2d()));
     log("stringValue", samples, OVERRIDE_FILE_ONLY);
@@ -104,14 +111,6 @@ public class Robot extends TimedRobot implements Logged {
   }
 
   @Override
-    public void driverStationConnected() {
-        //if we are in a match disable debug
-        Monologue.setFileOnly(
-            DriverStation.getMatchType() != MatchType.None
-        );
-    }
-
-  @Override
   public void autonomousInit() {}
 
   @Override
@@ -119,7 +118,6 @@ public class Robot extends TimedRobot implements Logged {
 
   @Override
   public void teleopInit() {
-
   }
 
   @Override
@@ -144,12 +142,12 @@ public class Robot extends TimedRobot implements Logged {
   public void simulationPeriodic() {}
 
   @Override
-  public String getPath() {
+  public String getOverrideName() {
     return "Robot";
   }
 
   @Log
   public String getStringPath() {
-    return getFullPath();
+    return getOverrideName();
   }
 }

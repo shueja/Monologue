@@ -38,18 +38,17 @@ class EvalField {
     field.setAccessible(true);
 
     if (evalNestedLogged(field, loggable, rootPath)) {
-      MonologueLog.RuntimeLog(rootPath + "." + field.getName() + " was logged recursively");
-      return;
+      MonologueLog.runtimeLog(rootPath + "." + field.getName() + " was logged recursively");
+    } else {
+      evalFieldAnnotations(field, loggable, rootPath);
     }
-
-    evalFieldAnnotations(field, loggable, rootPath);
   }
 
   private static boolean evalNestedLogged(Field field, Logged loggable, String rootPath) {
     final Optional<Object> fieldOptional = getField(field, loggable);
 
     if (fieldOptional.isEmpty() || field.isAnnotationPresent(IgnoreLogged.class)) {
-      MonologueLog.RuntimeLog(rootPath + "." + field.getName() + " is null or ignored");
+      MonologueLog.runtimeLog(rootPath + "." + field.getName() + " is null or ignored");
       return false;
     }
 
@@ -58,7 +57,7 @@ class EvalField {
     // if the field is of type Logged
     if (Logged.class.isAssignableFrom(field.getType())) {
       Logged logged = (Logged) fieldOptional.get();
-      String pathOverride = logged.getPath();
+      String pathOverride = logged.getOverrideName();
       if (pathOverride.equals("")) {
         pathOverride = field.getName();
       }
@@ -71,7 +70,7 @@ class EvalField {
         // Include all elements whose runtime class is Loggable
         for (Object obj : (Object[]) fieldOptional.get()) {
           if (obj instanceof Logged) {
-            String pathOverride = ((Logged) obj).getPath();
+            String pathOverride = ((Logged) obj).getOverrideName();
             if (pathOverride.equals("")) {
               pathOverride = obj.getClass().getSimpleName();
             }
@@ -87,7 +86,7 @@ class EvalField {
       // Include all elements whose runtime class is Loggable
       for (Object obj : (Collection<?>) fieldOptional.get()) {
         if (obj instanceof Logged) {
-          String pathOverride = ((Logged) obj).getPath();
+          String pathOverride = ((Logged) obj).getOverrideName();
           if (pathOverride.equals("")) {
             pathOverride = obj.getClass().getSimpleName();
           }
@@ -101,67 +100,65 @@ class EvalField {
     return recursed;
   }
 
-  private static boolean evalFieldAnnotations(Field field, Logged loggable, String rootPath) {
+  private static void evalFieldAnnotations(Field field, Logged loggable, String rootPath) {
     LogType logType = EvalAnno.annoEval(field);
 
     if (logType == LogType.None) {
-      return false;
+      return;
+    }
+
+    if (EvalAnno.overloadedAnno(field)) {
+      MonologueLog.runtimeWarn(
+          rootPath + "." + field.getName() + " has more than 1 logging annotation");
+      return;
     }
 
     LogMetadata logMetadata = EvalAnno.LogMetadata.from(field);
 
     if (logMetadata.once && getField(field, loggable).isEmpty()) {
-      MonologueLog.RuntimeWarn(rootPath + "." + field.getName() + " is null at setup");
+      MonologueLog.runtimeWarn(rootPath + "." + field.getName() + " is once and null at setup");
     }
 
     String name = logMetadata.relativePath.equals("") ? field.getName() : logMetadata.relativePath;
     String key = rootPath + "/" + name;
-    Class<?> type;
+    Class<?> type = field.getType();
 
-    try {
-      type = field.getType();
-    } catch (IllegalArgumentException e) {
-      MonologueLog.RuntimeWarn(
-          "Tried to log invalid type " + name + "(" + field.getType() + ") in " + rootPath);
-      return false;
+    if (!TypeChecker.isValidType(type)) {
+      MonologueLog.runtimeWarn(
+          rootPath + "." + field.getName() + " is not a valid type for logging");
+      return;
     }
+
+    if (Monologue.isMonologueDisabled())
+      // Most type validation and user code has happened,
+      // everything after this is actually logging so if disabled, return true
+      return;
 
     if (logType == LogType.File) {
       if (NTSendable.class.isAssignableFrom(type)) {
-        Monologue.dataLogger.addSendable(key, (NTSendable) getField(field, loggable).get());
+        MonologueLog.runtimeWarn(
+            "NTSendable isn't supported yet for file logging: " + rootPath + "." + field.getName());
       } else if (Sendable.class.isAssignableFrom(type)) {
         Monologue.dataLogger.addSendable(key, (Sendable) getField(field, loggable).get());
       } else {
         Monologue.dataLogger.addSupplier(
-            key,
-            field.getType(),
-            getSupplier(field, loggable),
-            logMetadata.level,
-            logMetadata.once);
+            key, type, getSupplier(field, loggable), logMetadata.level, logMetadata.once);
       }
     } else if (logType == LogType.Nt) {
       if (Sendable.class.isAssignableFrom(type) || NTSendable.class.isAssignableFrom(type)) {
         Monologue.ntLogger.addSendable(key, (Sendable) getField(field, loggable).get());
       } else {
         Monologue.ntLogger.addSupplier(
-            key,
-            field.getType(),
-            getSupplier(field, loggable),
-            logMetadata.level,
-            logMetadata.once);
+            key, type, getSupplier(field, loggable), logMetadata.level, logMetadata.once);
         if (logMetadata.level == LogLevel.DEFAULT && !logMetadata.once) {
           // The data *could* need to only go to datalog if its default log level,
           // register a supplier for dataLogger that can pickup the logging when the nt
           // one is deactivated by changing the FILE_ONLY flag
           Monologue.dataLogger.addSupplier(
-              key,
-              field.getType(),
-              getSupplier(field, loggable),
-              logMetadata.level,
-              logMetadata.once);
+              key, type, getSupplier(field, loggable), logMetadata.level, logMetadata.once);
         }
       }
     }
-    return true;
+    return;
   }
 }

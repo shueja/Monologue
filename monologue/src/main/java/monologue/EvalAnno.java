@@ -5,13 +5,20 @@ import monologue.Annotations.Log;
 
 class EvalAnno {
 
-  public static enum LogType {
+  static enum LogType {
     File,
     Nt,
     None;
   }
 
-  public static LogType annoEval(AccessibleObject element) {
+  /**
+   * Simplifies the user specified annotations on a field/method to a ternary conditiion expressed
+   * as {@link LogType}.
+   *
+   * @param element The field/method to simplify
+   * @return The simplified condition
+   */
+  static LogType annoEval(AccessibleObject element) {
     if (element.isAnnotationPresent(Log.NT.class)
         || element.isAnnotationPresent(Log.NT.Once.class)
         || element.isAnnotationPresent(Log.class)
@@ -25,18 +32,42 @@ class EvalAnno {
     }
   }
 
-  public static class LogMetadata {
+  /**
+   * Checks if their are multiple logging annotations on one field/method.
+   *
+   * @param element The field/method to check
+   * @return If there are too many logging annotations
+   */
+  static boolean overloadedAnno(AccessibleObject element) {
+    int count = 0;
+    for (var anno : Annotations.ALL_ANNOTATIONS) {
+      if (element.isAnnotationPresent(anno)) {
+        count++;
+      }
+    }
+    return count > 1;
+  }
+
+  /** A condensed packaged of what describes a singular logged field/method */
+  static class LogMetadata {
     public final LogLevel level;
     public final boolean once;
     public final String relativePath;
 
-    public LogMetadata(LogLevel level, boolean once, String path) {
+    private LogMetadata(LogLevel level, boolean once, String path) {
       this.level = level;
       this.once = once;
       this.relativePath = path;
     }
 
-    public static LogMetadata from(AccessibleObject element) {
+    /**
+     * Derives the metadata from an annotated field/method, if there are no logging annotations this
+     * returns null.
+     *
+     * @param element The field/method to derive the metadata from
+     * @return The metadata
+     */
+    static LogMetadata from(AccessibleObject element) {
       if (element.isAnnotationPresent(Log.File.class)) {
         Log.File anno = element.getAnnotation(Log.File.class);
         return new LogMetadata(anno.level(), false, anno.key());

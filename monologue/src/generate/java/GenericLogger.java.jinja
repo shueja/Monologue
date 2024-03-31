@@ -1,6 +1,5 @@
 package monologue;
 
-import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.util.struct.Struct;
 import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.util.sendable.Sendable;
@@ -18,154 +17,124 @@ import edu.wpi.first.wpilibj.Timer;
 import java.lang.reflect.Field;
 
 abstract class GenericLogger {
-    public interface LogRunnable extends LongConsumer {
-        String key();
-        void close();
-        void open();
-    }
-    protected GenericLogger() {}
-    private final Map<String, Struct<?>> structTypeCache = new HashMap<>();
+  public interface LogRunnable extends LongConsumer {
+    String key();
+    void close();
+    void open();
+  }
 
-    protected void addField(String key, LogLevel level, LongConsumer run, Runnable open, Runnable close) {
-        var runnable =  new LogRunnable() {
-            @Override
-            public String key() {
-                return key;
-            }
-            @Override
-            public void accept(long timestamp) {
-                try {
-                run.accept(timestamp);
-                } catch (Exception e) {}
-            }
-            @Override
-            public void open() {
-                try {
-                open.run();
-                } catch (Exception e) {}
-            }
-            @Override
-            public void close() {
-                try {
-                close.run();
-                } catch (Exception e) {}
-            }
-        };
-        runnableMap.get(level).add(runnable);
-    }
+  protected GenericLogger() {}
 
-    protected void addField(String key, LogLevel level, LongConsumer run) {
-        addField(key, level, run, ()->{}, ()->{});
-    }
+  private final Map<String, Struct<?>> structTypeCache = new HashMap<>();
 
-    private final Map<LogLevel, ArrayList<LogRunnable>> runnableMap = new HashMap<>(
-        Map.of(
-            LogLevel.OVERRIDE_FILE_ONLY, new ArrayList<>(),
-            LogLevel.DEFAULT, new ArrayList<>(),
-            LogLevel.NOT_FILE_ONLY, new ArrayList<>()
-        )
-    );
-    protected final Collection<SendableBuilder> sendables = new LinkedHashSet<>();
+  protected void addField(String key, LogLevel level, LongConsumer run, Runnable open, Runnable close) {
+    var runnable =  new LogRunnable() {
+      @Override
+      public String key() {
+        return key;
+      }
+      @Override
+      public void accept(long timestamp) {
+        try {
+          run.accept(timestamp);
+        } catch (Exception e) {}
+      }
+      @Override
+      public void open() {
+        try {
+          open.run();
+        } catch (Exception e) {}
+      }
+      @Override
+      public void close() {
+        try {
+          close.run();
+        } catch (Exception e) {}
+      }
+    };
+    runnableMap.get(level).add(runnable);
+  }
+
+  protected void addField(String key, LogLevel level, LongConsumer run) {
+    addField(key, level, run, ()->{}, ()->{});
+  }
+
+  private final Map<LogLevel, ArrayList<LogRunnable>> runnableMap = new HashMap<>(
+    Map.of(
+      LogLevel.OVERRIDE_FILE_ONLY, new ArrayList<>(),
+      LogLevel.DEFAULT, new ArrayList<>(),
+      LogLevel.NOT_FILE_ONLY, new ArrayList<>()
+    )
+  );
+  protected final Collection<SendableBuilder> sendables = new LinkedHashSet<>();
 
 {%for t in types%}
-    public void put(String entryName, {{t.java.ValueType}} value) {
-        put(entryName, value, LogLevel.DEFAULT);
-    }
-    public void put(String entryName, {{t.java.ValueType}} value, LogLevel level) {}
+  public void put(String entryName, {{t.java.ValueType}} value, LogLevel level) {}
 
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, LogLevel level) {}
-    public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier) {
-        add{{t.TypeName}}(entryName, valueSupplier, LogLevel.DEFAULT);
-    }
+  public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, LogLevel level) {}
 {%endfor%}
 
-    public <R extends StructSerializable> void put(String entryName, R value) {
-        put(entryName, value, LogLevel.DEFAULT);
-    }
-    public <R extends StructSerializable> void put(String entryName, R value, LogLevel level) {
-        putStruct(entryName, (Struct<R>) findStructType(value.getClass()), value, level);
-    }
+  public <R extends StructSerializable> void put(String entryName, R value, LogLevel level) {
+    putStruct(entryName, (Struct<R>) findStructType(value.getClass()), value, level);
+  }
 
-    public <R> void addStruct(String entryName, Struct<R> struct, Supplier<?extends R> valueSupplier, LogLevel level) {}
-    public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {}
-    public <R> void putStruct(String entryName, Struct<R> struct, R value) {
-        putStruct(entryName, struct, value, LogLevel.DEFAULT);
-    }
+  public <R> void addStruct(String entryName, Struct<R> struct, Supplier<?extends R> valueSupplier, LogLevel level) {}
+  public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {}
 
-    public <R extends StructSerializable> void put(String entryName, R[] value) {
-        put(entryName, value, LogLevel.DEFAULT);
-    }
-    public <R extends StructSerializable> void put(String entryName, R[] value, LogLevel level) {
-        Class<R> clazz = (Class<R>) value.getClass().getComponentType();
-        putStructArray(entryName, (Struct<R>) findStructType(clazz), value, level);
-    }
-    public <R> void addStructArray(String entryName, Struct<R> struct, Supplier<R[]> valueSupplier, LogLevel level) {}
-    public <R> void putStructArray(String entryName, Struct<R> struct, R[] value, LogLevel level) {}
-    public <R> void putStructArray(String entryName, Struct<R> struct, R[] value) {
-        putStructArray(entryName, struct, value, LogLevel.DEFAULT);
-    }
+  public <R extends StructSerializable> void put(String entryName, R[] value, LogLevel level) {
+    Class<R> clazz = (Class<R>) value.getClass().getComponentType();
+    putStructArray(entryName, (Struct<R>) findStructType(clazz), value, level);
+  }
+  public <R> void addStructArray(String entryName, Struct<R> struct, Supplier<R[]> valueSupplier, LogLevel level) {}
+  public <R> void putStructArray(String entryName, Struct<R> struct, R[] value, LogLevel level) {}
 
-    public void addSendable(String path, Sendable sendable) {};
+  public void addSendable(String path, Sendable sendable) {};
 
-    public void addSendable(String pathPrefix, String name, Sendable sendable) {
-        String prefix;
-        if (!pathPrefix.endsWith("/")) {
-            prefix = pathPrefix + "/" + name + "/";
-        } else {
-            prefix = pathPrefix + name + "/";
+  public void addSendable(String pathPrefix, String name, Sendable sendable) {
+    String prefix;
+    if (!pathPrefix.endsWith("/")) {
+      prefix = pathPrefix + "/" + name + "/";
+    } else {
+      prefix = pathPrefix + name + "/";
+    }
+    addSendable(prefix, sendable);
+  }
+
+  private boolean _isLazy = false;
+  public void setLazy(boolean isLazy) {
+    this._isLazy = isLazy;
+  }
+  public boolean isLazy() {return _isLazy;}
+
+  public boolean isNT() {return false;}
+
+  boolean lastIsFileOnly = true;
+  public void update(boolean isFileOnly) {
+    long timestamp = (long) (Timer.getFPGATimestamp() * 1e6);
+    for (Map.Entry<LogLevel, ArrayList<LogRunnable>> levelRunnables : runnableMap.entrySet()) {
+      if (lastIsFileOnly != isFileOnly) {
+        boolean wasLoggedBefore = levelRunnables.getKey().shouldLog(lastIsFileOnly, isNT());
+        boolean shouldLogNow = levelRunnables.getKey().shouldLog(isFileOnly, isNT());
+        if (wasLoggedBefore && !shouldLogNow) {
+          levelRunnables.getValue().stream().forEach(
+            (runnable) -> runnable.close()
+          );
         }
-        addSendable(prefix, sendable);
-    }
-
-    public void addSendable(String pathPrefix, String name, NTSendable sendable) {
-        String prefix;
-        if (!pathPrefix.endsWith("/")) {
-            prefix = pathPrefix + "/" + name + "/";
-        } else {
-            prefix = pathPrefix + name + "/";
+        if (!wasLoggedBefore && shouldLogNow) {
+          levelRunnables.getValue().stream().forEach(
+            (runnable) -> runnable.open()
+          );
         }
-        addSendable(prefix, (Sendable) sendable);
+      }
+      if (levelRunnables.getKey().shouldLog(isFileOnly, isNT())) {
+        levelRunnables.getValue().stream().forEach(
+          (runnable) -> runnable.accept(timestamp)
+        );
+      }
     }
-
-    public void addSendable(String path, NTSendable sendable) {
-        addSendable(path, (Sendable) sendable);
-    };
-
-    private boolean _isLazy = false;
-    public void setLazy(boolean isLazy) {
-        this._isLazy = isLazy;
-    }
-    public boolean isLazy() {return _isLazy;}
-
-    public boolean isNT() {return false;}
-
-    boolean lastDebugValue = true;
-    public void update(boolean debug) {
-        long timestamp = (long) (Timer.getFPGATimestamp() * 1e6);
-        for (Map.Entry<LogLevel, ArrayList<LogRunnable>> levelRunnables : runnableMap.entrySet()) {
-            if (lastDebugValue != debug) {
-                boolean wasLoggedBefore = levelRunnables.getKey().shouldLog(lastDebugValue, isNT());
-                boolean shouldLogNow = levelRunnables.getKey().shouldLog(debug, isNT());
-                if (wasLoggedBefore && !shouldLogNow) {
-                    levelRunnables.getValue().stream().forEach(
-                        (runnable) -> runnable.close()
-                    );
-                }
-                if (!wasLoggedBefore && shouldLogNow) {
-                    levelRunnables.getValue().stream().forEach(
-                        (runnable) -> runnable.open()
-                    );
-                }
-            }
-            if (levelRunnables.getKey().shouldLog(debug, isNT())) {
-                levelRunnables.getValue().stream().forEach(
-                    (runnable) -> runnable.accept(timestamp)
-                );
-            }
-        }
-        sendables.forEach(SendableBuilder::update);
-        lastDebugValue = debug;
-    }
+    sendables.forEach(SendableBuilder::update);
+    lastIsFileOnly = isFileOnly;
+  }
 
     @SuppressWarnings("unchecked")
     protected <T> Struct<T> findStructType(Class<T> classObj) {
@@ -194,11 +163,10 @@ abstract class GenericLogger {
                 else {
                     DriverStation.reportError("Struct field was null on: " + classObj.toString(), false);
                 }
-                
             }
             return (Struct<T>) structTypeCache.get(classObj.getName());
         } else {
-            DriverStation.reportError("Tried to find struct type for non-structable type " + classObj.toString(), false);
+            MonologueLog.runtimeWarn("Tried to find struct type for non-structable type " + classObj.getName());
             return null;
         }
     }
@@ -213,7 +181,6 @@ abstract class GenericLogger {
     }
 
     public <T> void addGeneric(String key, Class<?> type, Supplier<T> supplier, LogLevel level, boolean once) {
-        
         Struct<T> struct = (Struct<T>) findStructType(type);
         if (struct != null) {
             if (once){
@@ -235,108 +202,106 @@ abstract class GenericLogger {
                 }
             }
         }
-
     }
 
-    public <T> void addSupplier(String key, Class<?> type, Supplier<?> supplier, LogLevel level, boolean once) {
+  public <T> void addSupplier(String key, Class<?> type, Supplier<?> supplier, LogLevel level, boolean once) {
     if (type.isArray()) {
       // Array types
       Class<?> componentType = type.getComponentType();
       if (componentType.equals(byte.class)) {
         if (once) {
-            put(key, (byte[]) supplier.get(), level);
+          put(key, (byte[]) supplier.get(), level);
         } else {
-            addRaw(key, () -> (byte[]) supplier.get(), level);
+          addRaw(key, () -> (byte[]) supplier.get(), level);
         }
       } else if (componentType.equals(boolean.class)) {
         if (once) {
-            put(key, (boolean[]) supplier.get(), level);
+          put(key, (boolean[]) supplier.get(), level);
         } else {
-            addBooleanArray(key, () -> (boolean[]) supplier.get(), level);
+          addBooleanArray(key, () -> (boolean[]) supplier.get(), level);
         }
       } else if (componentType.equals(int.class)) {
         if (once) {
-            put(key, (int[]) supplier.get(), level);
+          put(key, (int[]) supplier.get(), level);
         } else {
-            addIntegerArray(key, () -> (int[]) supplier.get(), level);
+          addIntegerArray(key, () -> (int[]) supplier.get(), level);
         }
       } else if (componentType.equals(long.class)) {
         if (once) {
-            put(key, (long[]) supplier.get(), level);
+          put(key, (long[]) supplier.get(), level);
         } else {
-            addLongArray(key, ()->(long[]) supplier.get(), level);
+          addLongArray(key, ()->(long[]) supplier.get(), level);
         }
       } else if (componentType.equals(float.class)) {
         if (once) {
-            put(key, (float[]) supplier.get(), level);
+          put(key, (float[]) supplier.get(), level);
         } else {
-            addFloatArray(key, ()->(float[]) supplier.get(), level);
+          addFloatArray(key, ()->(float[]) supplier.get(), level);
         }
       } else if (componentType.equals(double.class)) {
         if (once) {
-            put(key, (double[]) supplier.get(), level);
+          put(key, (double[]) supplier.get(), level);
         } else {
-            addDoubleArray(key, ()->(double[]) supplier.get(), level);
+          addDoubleArray(key, ()->(double[]) supplier.get(), level);
         }
       } else if (componentType.equals(String.class)) {
         if (once) {
-            put(key, (String[]) supplier.get(), level);
+          put(key, (String[]) supplier.get(), level);
         } else {
-            addStringArray(key, ()->(String[]) supplier.get(), level);
+          addStringArray(key, ()->(String[]) supplier.get(), level);
         }
-    } else if (StructSerializable.class.isAssignableFrom(componentType)) {
+      } else if (StructSerializable.class.isAssignableFrom(componentType)) {
         addGenericArray(key, type, supplier, level, once);
-      
       } else {
-        DriverStation.reportError("Non-primitive arrays not supported by Monologue", true);
+        MonologueLog.runtimeWarn("Non-primitive arrays not supported by Monologue");
       }
     } else {
       // Single types
       if (type.equals(boolean.class)) {
         if (once) {
-            put(key, (boolean) supplier.get(), level);
+          put(key, (boolean) supplier.get(), level);
         } else {
-            addBoolean(key, ()->(boolean) supplier.get(), level);
+          addBoolean(key, ()->(boolean) supplier.get(), level);
         }
       } else if (type.equals(int.class)) {
         if (once) {
-            put(key, (int) supplier.get(), level);
+          put(key, (int) supplier.get(), level);
         } else {
-            addInteger(key, ()->(int) supplier.get(), level);
+          addInteger(key, ()->(int) supplier.get(), level);
         }
       } else if (type.equals(long.class)) {
         if (once) {
-            put(key, (long) supplier.get(), level);
+          put(key, (long) supplier.get(), level);
         } else {
-            addLong(key, ()->(long) supplier.get(), level);
+          addLong(key, ()->(long) supplier.get(), level);
         }
       } else if (type.equals(float.class)) {
         if (once) {
-            put(key, (float) supplier.get(), level);
+          put(key, (float) supplier.get(), level);
         } else {
-            addFloat(key, ()->(float) supplier.get(), level);
+          addFloat(key, ()->(float) supplier.get(), level);
         }
       } else if (type.equals(double.class)) {
         if (once) {
-            put(key, (double) supplier.get(), level);
+          put(key, (double) supplier.get(), level);
         } else {
-            addDouble(key, ()->(double) supplier.get(), level);
+          addDouble(key, ()->(double) supplier.get(), level);
         }
       } else if (type.equals(String.class)) {
         if (once) {
-            put(key, (String) supplier.get(), level);
+          put(key, (String) supplier.get(), level);
         } else {
-            addString(key, ()->(String) supplier.get(), level);
+          addString(key, ()->(String) supplier.get(), level);
         }
       } else if (type.isEnum()) {
         if (once) {
-            Object value = supplier.get();
-            if (value != null) {
-                // Cannot cast to enum subclass, log the name directly
-                put(key, ((Enum<?>) value).name(), level);
-              } else {
-                put(key, "null", level);
-              }
+          Object value = supplier.get();
+          if (value != null) {
+            // Cannot cast to enum subclass, log the name directly
+            put(key, ((Enum<?>) value).name(), level);
+          } else {
+            put(key, "null", level);
+          }
         } else {
         addString(key, 
         () -> {
@@ -345,7 +310,7 @@ abstract class GenericLogger {
               // Cannot cast to enum subclass, log the name directly
               return ((Enum<?>) value).name();
             } else {
-                return "null";
+              return "null";
             }
           }, level);
         }
