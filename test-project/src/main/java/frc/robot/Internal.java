@@ -9,9 +9,6 @@ import monologue.Logged;
 public class Internal implements Logged {
 
   @Log
-  static Boolean staticBool = true;
-
-  @Log
   SwerveModuleState state = new SwerveModuleState(1, new Rotation2d(0.5));
   @Log
   ArmFeedforward ff = new ArmFeedforward(1, 2, 3, 4);

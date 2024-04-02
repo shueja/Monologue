@@ -7,6 +7,7 @@ package frc.robot;
 import monologue.LogLevel;
 import monologue.Logged;
 import monologue.Monologue;
+import monologue.Monologue.MonologueConfig;
 import monologue.Annotations.*;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -19,7 +20,6 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import frc.robot.inheritance.Child;
 
-import static monologue.Monologue.MonologueConfig;
 import static monologue.LogLevel.*;
 
 import java.util.ArrayList;
@@ -28,6 +28,7 @@ import java.util.List;
 
 public class Robot extends TimedRobot implements Logged {
   @Log.Once private boolean flippingBool = false;
+  @Log static Boolean staticFlippingBool = true;
   private int samples = 0;
   @Log(level = NOT_FILE_ONLY) int debugSamples = 0;
   @Log(level = DEFAULT) int lowbandwidthSamples = 0;
@@ -37,11 +38,12 @@ public class Robot extends TimedRobot implements Logged {
 
   @Log Unloggable unloggable = new Unloggable();
 
-  ArrayList<Internal> internals = new ArrayList<>(List.of(
+  ArrayList<Internal> internalsList = new ArrayList<>(List.of(
     new Internal(""),
     new Internal(""),
     new Internal("")
   ));
+
   double totalOfAvgs = 0;
   double avgsTaken = 0;
 
@@ -53,13 +55,13 @@ public class Robot extends TimedRobot implements Logged {
   };
 
   @SuppressWarnings("unused")
-  private Geometry geometry = new Geometry();
+  private final Geometry geometry = new Geometry();
 
   @IgnoreLogged
   private Geometry geometryIgnored = new Geometry();
 
   @SuppressWarnings("unused")
-  private Child child = new Child();
+  private final Child child = new Child();
 
   private Translation2d translation2d = new Translation2d(1.0, 2.0);
 
@@ -102,7 +104,7 @@ public class Robot extends TimedRobot implements Logged {
     lowbandwidthSamples++;
     compSamples++;
     flippingBool = !flippingBool;
-    Internal.staticBool = !Internal.staticBool;
+    staticFlippingBool = !staticFlippingBool;
     translation2d = new Translation2d(
       (Math.random()+0.55) * translation2d.getX(),
       (Math.random()+0.55) * translation2d.getY()

@@ -7,6 +7,7 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import java.util.function.*;
 
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -37,19 +38,25 @@ abstract class GenericLogger {
       public void accept(long timestamp) {
         try {
           run.accept(timestamp);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+          MonologueLog.runtimeWarn("Exception while logging field: " + key);
+        }
       }
       @Override
       public void open() {
         try {
           open.run();
-        } catch (Exception e) {}
+        } catch (Exception e) {
+          MonologueLog.runtimeWarn("Exception while opening log field: " + key);
+        }
       }
       @Override
       public void close() {
         try {
           close.run();
-        } catch (Exception e) {}
+        } catch (Exception e) {
+          MonologueLog.runtimeWarn("Exception while closing log field: " + key);
+        }
       }
     };
     runnableMap.get(level).add(runnable);
@@ -59,7 +66,7 @@ abstract class GenericLogger {
     addField(key, level, run, ()->{}, ()->{});
   }
 
-  private final Map<LogLevel, ArrayList<LogRunnable>> runnableMap = new HashMap<>(
+  private final EnumMap<LogLevel, ArrayList<LogRunnable>> runnableMap = new EnumMap<>(
     Map.of(
       LogLevel.OVERRIDE_FILE_ONLY, new ArrayList<>(),
       LogLevel.DEFAULT, new ArrayList<>(),
@@ -74,6 +81,7 @@ abstract class GenericLogger {
   public void add{{t.TypeName}}(String entryName, {{t.java.Supplier}} valueSupplier, LogLevel level) {}
 {%endfor%}
 
+  @SuppressWarnings("unchecked")
   public <R extends StructSerializable> void put(String entryName, R value, LogLevel level) {
     putStruct(entryName, (Struct<R>) findStructType(value.getClass()), value, level);
   }
@@ -81,6 +89,7 @@ abstract class GenericLogger {
   public <R> void addStruct(String entryName, Struct<R> struct, Supplier<?extends R> valueSupplier, LogLevel level) {}
   public <R> void putStruct(String entryName, Struct<R> struct, R value, LogLevel level) {}
 
+  @SuppressWarnings("unchecked")
   public <R extends StructSerializable> void put(String entryName, R[] value, LogLevel level) {
     Class<R> clazz = (Class<R>) value.getClass().getComponentType();
     putStructArray(entryName, (Struct<R>) findStructType(clazz), value, level);
@@ -180,65 +189,85 @@ abstract class GenericLogger {
         return newArr;
     }
 
-    public <T> void addGeneric(String key, Class<?> type, Supplier<T> supplier, LogLevel level, boolean once) {
-        Struct<T> struct = (Struct<T>) findStructType(type);
-        if (struct != null) {
-            if (once){
-                putStruct(key, struct, supplier.get(), level);
-            } else {
-                addStruct(key, struct, supplier, level);
-            }
-    }}
-
-    public <T> void addGenericArray(String key, Class<?> type, Supplier<?> supplier, LogLevel level, boolean once) {
-        if (type.isArray()) {
-            Class<T> componentType = (Class<T>) type.getComponentType();
-            Struct<T> struct = (Struct<T>) findStructType(componentType);
-            if (struct != null) {
-                if (once){
-                    putStructArray(key, struct, (T[]) supplier.get(), level);
-                } else {
-                    addStructArray(key, struct, ()->(T[]) supplier.get(), level);
-                }
-            }
-        }
+  @SuppressWarnings("unchecked")
+  public <T> void addGeneric(String key, Class<?> type, Supplier<T> supplier, LogLevel level, boolean once) {
+    Struct<T> struct = (Struct<T>) findStructType(type);
+    if (struct != null) {
+      if (once){
+        putStruct(key, struct, supplier.get(), level);
+      } else {
+        addStruct(key, struct, supplier, level);
+      }
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T> void addGenericArray(String key, Class<?> type, Supplier<?> supplier, LogLevel level, boolean once) {
+    if (type.isArray()) {
+      Class<T> componentType = (Class<T>) type.getComponentType();
+      Struct<T> struct = (Struct<T>) findStructType(componentType);
+      if (struct != null) {
+        if (once){
+          putStructArray(key, struct, (T[]) supplier.get(), level);
+        } else {
+          addStructArray(key, struct, ()->(T[]) supplier.get(), level);
+        }
+      }
+    }
+  }
+
+  public Class<?> simplfyPrimTypes(Class<?> type) {
+    if (type.equals(boolean.class)) {
+      return Boolean.class;
+    } else if (type.equals(int.class)) {
+      return Integer.class;
+    } else if (type.equals(long.class)) {
+      return Long.class;
+    } else if (type.equals(float.class)) {
+      return Float.class;
+    } else if (type.equals(double.class)) {
+      return Double.class;
+    } else {
+      return type;
+    }
+  }
 
   public <T> void addSupplier(String key, Class<?> type, Supplier<?> supplier, LogLevel level, boolean once) {
+    type = simplfyPrimTypes(type);
     if (type.isArray()) {
       // Array types
       Class<?> componentType = type.getComponentType();
-      if (componentType.equals(byte.class)) {
+      if (componentType.equals(Byte.class)) {
         if (once) {
           put(key, (byte[]) supplier.get(), level);
         } else {
           addRaw(key, () -> (byte[]) supplier.get(), level);
         }
-      } else if (componentType.equals(boolean.class)) {
+      } else if (componentType.equals(Boolean.class)) {
         if (once) {
           put(key, (boolean[]) supplier.get(), level);
         } else {
           addBooleanArray(key, () -> (boolean[]) supplier.get(), level);
         }
-      } else if (componentType.equals(int.class)) {
+      } else if (componentType.equals(Integer.class)) {
         if (once) {
           put(key, (int[]) supplier.get(), level);
         } else {
           addIntegerArray(key, () -> (int[]) supplier.get(), level);
         }
-      } else if (componentType.equals(long.class)) {
+      } else if (componentType.equals(Long.class)) {
         if (once) {
           put(key, (long[]) supplier.get(), level);
         } else {
           addLongArray(key, ()->(long[]) supplier.get(), level);
         }
-      } else if (componentType.equals(float.class)) {
+      } else if (componentType.equals(Float.class)) {
         if (once) {
           put(key, (float[]) supplier.get(), level);
         } else {
           addFloatArray(key, ()->(float[]) supplier.get(), level);
         }
-      } else if (componentType.equals(double.class)) {
+      } else if (componentType.equals(Double.class)) {
         if (once) {
           put(key, (double[]) supplier.get(), level);
         } else {
@@ -257,31 +286,31 @@ abstract class GenericLogger {
       }
     } else {
       // Single types
-      if (type.equals(boolean.class)) {
+      if (type.equals(Boolean.class)) {
         if (once) {
           put(key, (boolean) supplier.get(), level);
         } else {
           addBoolean(key, ()->(boolean) supplier.get(), level);
         }
-      } else if (type.equals(int.class)) {
+      } else if (type.equals(Integer.class)) {
         if (once) {
           put(key, (int) supplier.get(), level);
         } else {
           addInteger(key, ()->(int) supplier.get(), level);
         }
-      } else if (type.equals(long.class)) {
+      } else if (type.equals(Long.class)) {
         if (once) {
           put(key, (long) supplier.get(), level);
         } else {
           addLong(key, ()->(long) supplier.get(), level);
         }
-      } else if (type.equals(float.class)) {
+      } else if (type.equals(Float.class)) {
         if (once) {
           put(key, (float) supplier.get(), level);
         } else {
           addFloat(key, ()->(float) supplier.get(), level);
         }
-      } else if (type.equals(double.class)) {
+      } else if (type.equals(Double.class)) {
         if (once) {
           put(key, (double) supplier.get(), level);
         } else {

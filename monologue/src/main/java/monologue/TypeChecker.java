@@ -2,7 +2,6 @@ package monologue;
 
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.struct.StructSerializable;
-import java.util.Collection;
 
 class TypeChecker {
   private static final Class<?>[] LITERAL_TYPES = {
@@ -22,8 +21,6 @@ class TypeChecker {
   private static final Class<?>[] EXTENDABLE_TYPES = {
     Enum.class, StructSerializable.class, Sendable.class
   };
-
-  private static final Class<?>[] COLLECTION_TYPES = {Collection.class};
 
   static boolean isValidLiteralType(Class<?> type) {
     for (Class<?> literalType : LITERAL_TYPES) {
@@ -47,13 +44,6 @@ class TypeChecker {
     if (type.isArray()) {
       Class<?> componentType = type.getComponentType();
       return isValidLiteralType(componentType) || isValidExtendableType(componentType);
-    }
-
-    for (Class<?> collectionType : COLLECTION_TYPES) {
-      if (collectionType.isAssignableFrom(type)) {
-        Class<?> elementType = type.getTypeParameters()[0].getGenericDeclaration();
-        return isValidLiteralType(elementType) || isValidExtendableType(elementType);
-      }
     }
 
     return isValidLiteralType(type) || isValidExtendableType(type);

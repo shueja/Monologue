@@ -49,6 +49,7 @@ public class Monologue {
   private static boolean HAS_SETUP_BEEN_CALLED = false;
   private static boolean IS_DISABLED = false;
   private static boolean THROW_ON_WARN = false;
+  private static boolean ALLOW_NON_FINAL_LOGGED_FIELDS = false;
 
   static final NTLogger ntLogger = new NTLogger();
   static final DataLogger dataLogger = new DataLogger();
@@ -60,7 +61,11 @@ public class Monologue {
    * existing code.
    */
   public static record MonologueConfig(
-      BooleanSupplier fileOnly, boolean lazyLogging, String datalogPrefix, boolean throwOnWarn) {
+      BooleanSupplier fileOnly,
+      boolean lazyLogging,
+      String datalogPrefix,
+      boolean throwOnWarn,
+      boolean allowNonFinalLoggedFields) {
     public MonologueConfig {
       if (datalogPrefix == null) {
         throw new IllegalArgumentException(
@@ -69,7 +74,7 @@ public class Monologue {
     }
 
     public MonologueConfig() {
-      this(() -> false, false, "NT:", false);
+      this(() -> false, false, "NT:", false, false);
     }
 
     /**
@@ -79,7 +84,8 @@ public class Monologue {
      * @return A new MonologueConfig object with the updated fileOnly flag supplier
      */
     public MonologueConfig withFileOnly(BooleanSupplier fileOnly) {
-      return new MonologueConfig(fileOnly, lazyLogging, datalogPrefix, throwOnWarn);
+      return new MonologueConfig(
+          fileOnly, lazyLogging, datalogPrefix, throwOnWarn, allowNonFinalLoggedFields);
     }
 
     /**
@@ -89,7 +95,8 @@ public class Monologue {
      * @return A new MonologueConfig object with the updated fileOnly flag
      */
     public MonologueConfig withFileOnly(Boolean fileOnly) {
-      return new MonologueConfig(() -> fileOnly, lazyLogging, datalogPrefix, throwOnWarn);
+      return new MonologueConfig(
+          () -> fileOnly, lazyLogging, datalogPrefix, throwOnWarn, allowNonFinalLoggedFields);
     }
 
     /**
@@ -99,7 +106,8 @@ public class Monologue {
      * @return A new MonologueConfig object with the updated lazyLogging flag
      */
     public MonologueConfig withLazyLogging(boolean lazyLogging) {
-      return new MonologueConfig(fileOnly, lazyLogging, datalogPrefix, throwOnWarn);
+      return new MonologueConfig(
+          fileOnly, lazyLogging, datalogPrefix, throwOnWarn, allowNonFinalLoggedFields);
     }
 
     /**
@@ -109,7 +117,8 @@ public class Monologue {
      * @return A new MonologueConfig object with the updated datalogPrefix
      */
     public MonologueConfig withDatalogPrefix(String datalogPrefix) {
-      return new MonologueConfig(fileOnly, lazyLogging, datalogPrefix, throwOnWarn);
+      return new MonologueConfig(
+          fileOnly, lazyLogging, datalogPrefix, throwOnWarn, allowNonFinalLoggedFields);
     }
 
     /**
@@ -120,7 +129,21 @@ public class Monologue {
      * @return A new MonologueConfig object with the updated throwOnWarn flag
      */
     public MonologueConfig withThrowOnWarning(boolean throwOnWarn) {
-      return new MonologueConfig(fileOnly, lazyLogging, datalogPrefix, throwOnWarn);
+      return new MonologueConfig(
+          fileOnly, lazyLogging, datalogPrefix, throwOnWarn, allowNonFinalLoggedFields);
+    }
+
+    /**
+     * Updates the allowNonFinalLoggedFields flag. If true, Monologue will allow non-final fields
+     * containing {@link Logged} objects to be logged. This is not reccomended as it can lead to
+     * unexpected behavior.
+     *
+     * @param allowNonFinalLoggedFields The new allowNonFinalLoggedFields flag
+     * @return A new MonologueConfig object with the updated allowNonFinalLoggedFields flag
+     */
+    public MonologueConfig withAllowNonFinalLoggedFields(boolean allowNonFinalLoggedFields) {
+      return new MonologueConfig(
+          fileOnly, lazyLogging, datalogPrefix, throwOnWarn, allowNonFinalLoggedFields);
     }
   }
 
@@ -155,6 +178,7 @@ public class Monologue {
             + config);
 
     THROW_ON_WARN = config.throwOnWarn;
+    ALLOW_NON_FINAL_LOGGED_FIELDS = config.allowNonFinalLoggedFields;
 
     FILE_ONLY = config.fileOnly.getAsBoolean();
     ntLogger.setLazy(config.lazyLogging);
@@ -326,6 +350,17 @@ public class Monologue {
    */
   static boolean shouldThrowOnWarn() {
     return THROW_ON_WARN;
+  }
+
+  /**
+   * Checks if the Monologue library should allow non-final fields containing {@link Logged} objects
+   * to be logged.
+   *
+   * @return true if Monologue should allow non-final fields containing {@link Logged} objects to be
+   *     logged, false otherwise
+   */
+  static boolean shouldAllowNonFinalLoggedFields() {
+    return ALLOW_NON_FINAL_LOGGED_FIELDS;
   }
 
   /**
