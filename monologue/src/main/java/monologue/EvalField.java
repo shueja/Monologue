@@ -117,6 +117,11 @@ class EvalField {
       return;
     }
 
+    if (Modifier.isStatic(field.getModifiers())) {
+      MonologueLog.runtimeWarn(rootPath + "." + field.getName() + " is static and will be ignored");
+      return;
+    }
+
     if (EvalAnno.overloadedAnno(field)) {
       MonologueLog.runtimeWarn(
           rootPath + "." + field.getName() + " has more than 1 logging annotation");

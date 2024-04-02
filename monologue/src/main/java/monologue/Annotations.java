@@ -21,6 +21,8 @@ public class Annotations {
 
   /**
    * Logs the annotated field/method to NetworkTables if inside a {@link Logged} class.
+   * 
+   * <p> Static fields and methods will emit a warning and not be logged.
    *
    * @param key [optional] the key to log the variable as. If empty, the key will be the name of the
    *     field/method

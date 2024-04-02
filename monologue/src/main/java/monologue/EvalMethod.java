@@ -3,6 +3,7 @@ package monologue;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.util.sendable.Sendable;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
 import monologue.EvalAnno.LogMetadata;
@@ -27,6 +28,8 @@ class EvalMethod {
   }
 
   public static void evalMethod(Method method, Logged loggable, String rootPath) {
+    method.setAccessible(true);
+
     evalMethodAnnotations(method, loggable, rootPath);
   }
 
@@ -38,7 +41,15 @@ class EvalMethod {
       return;
     }
 
-    method.setAccessible(true);
+    if (Modifier.isStatic(method.getModifiers())) {
+      MonologueLog.runtimeWarn(
+          "Tried to log static method "
+              + method.getName()
+              + " in "
+              + rootPath
+              + ": Static methods are not supported");
+      return;
+    }
 
     LogMetadata logMetadata = EvalAnno.LogMetadata.from(method);
 
