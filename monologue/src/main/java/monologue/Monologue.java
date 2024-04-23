@@ -193,7 +193,8 @@ public class Monologue {
 
     DataLog dataLog = DataLogManager.getLog();
 
-    NetworkTableInstance.getDefault().startEntryDataLog(dataLog, rootpath, config.datalogPrefix);
+    NetworkTableInstance.getDefault()
+        .startEntryDataLog(dataLog, rootpath, config.datalogPrefix + rootpath);
     NetworkTableInstance.getDefault().startConnectionDataLog(dataLog, "NTConnection");
     DriverStation.startDataLog(dataLog, true);
 
@@ -297,6 +298,13 @@ public class Monologue {
     dataLogger.update(FILE_ONLY);
   }
 
+  public static void sendNetworkToFile(String subtablePath) {
+    if (isMonologueDisabled()) return;
+    subtablePath = NetworkTable.normalizeKey(subtablePath, true);
+    NetworkTableInstance.getDefault()
+        .startEntryDataLog(dataLogger.log, subtablePath, config.datalogPrefix + subtablePath);
+  }
+
   private static List<Field> getAllFields(Class<?> type) {
     List<Field> result = new ArrayList<Field>();
 
@@ -379,7 +387,7 @@ public class Monologue {
    */
   static boolean isMonologueReady(String key) {
     if (!hasBeenSetup()) {
-      MonologueLog.runtimeWarn("Tried to log " + key + " before Monologue was setup");
+      MonologueLog.runtimeWarn("Tried to log \"" + key + "\" before Monologue was setup");
       return false;
     }
     return true;

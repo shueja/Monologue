@@ -310,15 +310,15 @@ class NTLogger extends GenericLogger {
     }
 
     @Override
-    public void addSendable(String path, Sendable sendable) {   
-        if (sendable == null) {return;}     
+    public void addSendable(String path, Sendable sendable) {
+        if (sendable == null) {return;}
         var builder = new SendableBuilderImpl();
         builder.setTable(table.getTable(path));
         sendable.initSendable(builder);
         builder.startListeners();
         table.getTable(path).getEntry(".controllable").setBoolean(false);
         sendables.add(builder);
-        NetworkTablesJNI.startEntryDataLog(NetworkTableInstance.getDefault().getHandle(), DataLogManager.getLog(), path, "NT:" + path);
+        // NetworkTablesJNI.startEntryDataLog(NetworkTableInstance.getDefault().getHandle(), DataLogManager.getLog(), path, "NT:" + path);
     }
 
     @Override
