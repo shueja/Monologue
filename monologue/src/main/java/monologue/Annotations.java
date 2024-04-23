@@ -21,8 +21,8 @@ public class Annotations {
 
   /**
    * Logs the annotated field/method to NetworkTables if inside a {@link Logged} class.
-   * 
-   * <p> Static fields and methods will emit a warning and not be logged.
+   *
+   * <p>Static fields and methods will emit a warning and not be logged.
    *
    * @param key [optional] the key to log the variable as. If empty, the key will be the name of the
    *     field/method
@@ -139,4 +139,13 @@ public class Annotations {
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD})
   public @interface IgnoreLogged {}
+
+  /**
+   * Will cause the internal fields of the annotated field to be logged as if they were fields of
+   * the object this field is in. This is useful for flattening complex objects into a single path.
+   */
+  @Documented
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.FIELD})
+  public @interface FlattenedLogged {}
 }

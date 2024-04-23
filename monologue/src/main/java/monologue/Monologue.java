@@ -5,6 +5,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -155,9 +156,8 @@ public class Monologue {
    * well.
    *
    * @param loggable the root Logged object to log
-   * @param rootpath the root path to log to
-   * @param fileOnly the FILE_ONLY flag for the monologue library
-   * @param lazyLogging if true, will only log when the value changes
+   * @param rootpath the root path to log to\
+   * @param config the configuration for the Monologue library
    * @apiNote Should only be called once, if another {@link Logged} tree needs to be created use
    *     {@link #logObj(Logged, String)} for additional trees
    */
@@ -165,6 +165,11 @@ public class Monologue {
     if (HAS_SETUP_BEEN_CALLED) {
       throw new IllegalStateException("Monologue.setupMonologue() has already been called");
     }
+
+    // create and start a timer to time the setup process
+    Timer timer = new Timer();
+    timer.start();
+
     Monologue.config = config;
     HAS_SETUP_BEEN_CALLED = true;
     rootpath = NetworkTable.normalizeKey(rootpath, true);
@@ -194,7 +199,9 @@ public class Monologue {
 
     logObj(loggable, rootpath);
 
-    MonologueLog.runtimeLog("Monologue.setupMonologue() finished");
+    System.gc();
+
+    MonologueLog.runtimeLog("Monologue.setupMonologue() finished in " + timer.get() + " seconds");
   }
 
   /**
