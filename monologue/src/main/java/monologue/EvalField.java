@@ -131,7 +131,7 @@ class EvalField {
     LogMetadata logMetadata = EvalAnno.LogMetadata.from(field);
 
     if (logMetadata.once && getField(field, loggable).isEmpty()) {
-      MonologueLog.runtimeWarn(rootPath + "." + field.getName() + " is once and null at setup");
+      MonologueLog.runtimeWarn(rootPath + "." + field.getName() + " is logged once and is null at setup");
     }
 
     String name = logMetadata.relativePath.equals("") ? field.getName() : logMetadata.relativePath;
