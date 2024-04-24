@@ -38,6 +38,9 @@ public class Robot extends TimedRobot implements Logged {
   @Log(level = DEFAULT) int lowbandwidthSamples = 0;
   @Log(level = OVERRIDE_FILE_ONLY) int compSamples = 0;
 
+  @Log
+  private static Pose2d staticPose = new Pose2d();
+
   ArrayList<Internal> internals = new ArrayList<>(List.of(
     new Internal(""),
     new Internal(""),
@@ -89,6 +92,7 @@ public class Robot extends TimedRobot implements Logged {
 
   @Override
   public void robotPeriodic() {
+    staticPose = new Pose2d(translation2d, new Rotation2d());
     Monologue.setFileOnly(fileOnlyEntry.get());
     Monologue.updateAll();
     field.getRobotObject().setPose(new Pose2d(samples / 100.0, 0, new Rotation2d()));

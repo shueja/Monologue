@@ -31,6 +31,12 @@
     },
     "transitory": {
       "Robot": {
+        "Pose2d##v_/Robot/staticPose": {
+          "Translation2d##v_translation": {
+            "open": true
+          },
+          "open": true
+        },
         "SwerveModuleState##v_/Robot/state": {
           "Rotation2d##v_angle": {
             "open": true

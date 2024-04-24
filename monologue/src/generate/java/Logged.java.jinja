@@ -13,44 +13,44 @@ public interface Logged {
     return Monologue.loggedRegistry.getOrDefault(this, "notfound");
   }
 
-  public default void addLoggingSupplier(String key, DoubleSupplier value) {
-    Monologue.ntLogger.addDouble(key,()->value.getAsDouble());
+  public default void addLoggingSupplier(String key, DoubleSupplier valueSupplier) {
+    Monologue.ntLogger.addDouble(key, valueSupplier::getAsDouble);
   }
 
-  public default void addLoggingSupplier(String key, DoubleSupplier value, LogLevel level) {
-    Monologue.ntLogger.addDouble(key,()->value.getAsDouble(), level);
+  public default void addLoggingSupplier(String key, DoubleSupplier valueSupplier, LogLevel level) {
+    Monologue.ntLogger.addDouble(key, valueSupplier::getAsDouble, level);
   }
 
-  public default void addLoggingSupplier(String key, IntSupplier value) {
-    Monologue.ntLogger.addInteger(key,()->value.getAsInt());
+  public default void addLoggingSupplier(String key, IntSupplier valueSupplier) {
+    Monologue.ntLogger.addInteger(key, valueSupplier::getAsInt);
   }
 
-  public default void addLoggingSupplier(String key, IntSupplier value, LogLevel level) {
-    Monologue.ntLogger.addInteger(key,()->value.getAsInt(), level);
+  public default void addLoggingSupplier(String key, IntSupplier valueSupplier, LogLevel level) {
+    Monologue.ntLogger.addInteger(key, valueSupplier::getAsInt, level);
   }
 
-  public default void addLoggingSupplier(String key, BooleanSupplier value) {
-    Monologue.ntLogger.addBoolean(key,()->value.getAsBoolean());
+  public default void addLoggingSupplier(String key, BooleanSupplier valueSupplier value) {
+    Monologue.ntLogger.addBoolean(key, value::getAsBoolean);
   }
 
-  public default void addLoggingSupplier(String key, BooleanSupplier value, LogLevel level) {
-    Monologue.ntLogger.addBoolean(key,()->value.getAsBoolean(), level);
+  public default void addLoggingSupplier(String key, BooleanSupplier valueSupplier, LogLevel level) {
+    Monologue.ntLogger.addBoolean(key, valueSupplier::getAsBoolean, level);
   }
   
-  public default void addLoggingSupplier(String key, FloatSupplier value) {
-    Monologue.ntLogger.addFloat(key,()->value.getAsFloat());
+  public default void addLoggingSupplier(String key, FloatSupplier valueSupplier) {
+    Monologue.ntLogger.addFloat(key, valueSupplier::getAsFloat);
   }
 
-  public default void addLoggingSupplier(String key, FloatSupplier value, LogLevel level) {
-    Monologue.ntLogger.addFloat(key,()->value.getAsFloat(), level);
+  public default void addLoggingSupplier(String key, FloatSupplier valueSupplier, LogLevel level) {
+    Monologue.ntLogger.addFloat(key, valueSupplier::getAsFloat, level);
   }
 
-  public default void addLoggingSupplier(String key, LongSupplier value) {
-    Monologue.ntLogger.addLong(key,()->value.getAsLong());
+  public default void addLoggingSupplier(String key, LongSupplier valueSupplier) {
+    Monologue.ntLogger.addLong(key, valueSupplier::getAsLong);
   }
 
-  public default void addLoggingSupplier(String key, LongSupplier value, LogLevel level) {
-    Monologue.ntLogger.addLong(key,()->value.getAsLong(), level);
+  public default void addLoggingSupplier(String key, LongSupplier valueSupplier, LogLevel level) {
+    Monologue.ntLogger.addLong(key, valueSupplier::getAsLong, level);
   }
 {%for t in types%}
   public default void log(String key, {{t.java.ValueType}} value) {
