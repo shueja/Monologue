@@ -3,7 +3,6 @@ package monologue;
 import edu.wpi.first.util.function.FloatSupplier;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.struct.StructSerializable;
-
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntSupplier;
@@ -68,7 +67,9 @@ class TypeChecker {
   static boolean isValidType(Class<?> type) {
     if (type.isArray()) {
       Class<?> componentType = type.getComponentType();
-      return isValidLiteralType(componentType) || isValidExtendableType(componentType) || isValidFunctionalType(type);
+      return isValidLiteralType(componentType)
+          || isValidExtendableType(componentType)
+          || isValidFunctionalType(type);
     }
 
     return isValidLiteralType(type) || isValidExtendableType(type) || isValidFunctionalType(type);

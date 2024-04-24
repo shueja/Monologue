@@ -20,7 +20,7 @@ class EvalMethod {
             Logged.getFullPath(loggable)
                 + "."
                 + method.getName()
-                + " supllier is erroring: "
+                + " supplier is erroring: "
                 + e.toString());
         return null;
       }
