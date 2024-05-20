@@ -318,7 +318,6 @@ class NTLogger extends GenericLogger {
         builder.startListeners();
         table.getTable(path).getEntry(".controllable").setBoolean(false);
         sendables.add(builder);
-        // NetworkTablesJNI.startEntryDataLog(NetworkTableInstance.getDefault().getHandle(), DataLogManager.getLog(), path, "NT:" + path);
     }
 
     @Override

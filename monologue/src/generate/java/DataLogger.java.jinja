@@ -20,26 +20,6 @@ class DataLogger extends GenericLogger {
         log = DataLogManager.getLog();
     }
 
-    private static class NTIntegerArrayLogEntry extends DataLogEntry {
-        public static final String kDataType = "int[]";
-
-        public NTIntegerArrayLogEntry(DataLog log, String name, String metadata, long timestamp) {
-            super(log, name, kDataType, metadata, timestamp);
-        }
-
-        public NTIntegerArrayLogEntry(DataLog log, String name) {
-            this(log, name, "", 0);
-        }
-
-        public void append(long[] value, long timestamp) {
-            m_log.appendIntegerArray(m_entry, value, timestamp);
-        }
-
-        public void append(long[] value) {
-            m_log.appendIntegerArray(m_entry, value, 0);
-        }
-    }
-
 {%for t in types%}
 
     @Override
@@ -55,10 +35,10 @@ class DataLogger extends GenericLogger {
         if (value == null) {return;}
 {%endif%}
 {%if t.TypeName == 'IntegerArray'%}
-        new NTIntegerArrayLogEntry(log, prefix + entryName)
+        new IntegerArrayLogEntry(log, prefix + entryName)
             .append(toLongArray(value));
 {%elif t.TypeName == 'LongArray'%}
-        new NTIntegerArrayLogEntry(log, prefix + entryName)
+        new IntegerArrayLogEntry(log, prefix + entryName)
         .append(value);
 {%else%}
         new {{t.java.EntryName}}LogEntry(log, prefix + entryName).append(value);
@@ -72,7 +52,7 @@ class DataLogger extends GenericLogger {
         LogLevel level
     ) {
         {%if t.TypeName == 'IntegerArray' or t.TypeName == 'LongArray'%}
-        var entry = new NTIntegerArrayLogEntry(log, prefix + entryName);
+        var entry = new IntegerArrayLogEntry(log, prefix + entryName);
 {%else %}
         var entry = new {{t.java.EntryName}}LogEntry(log, prefix + entryName);
 {%endif%}

@@ -216,7 +216,7 @@ abstract class GenericLogger {
     }
   }
 
-  public Class<?> simplfyPrimTypes(Class<?> type) {
+  public Class<?> simplifyPrimTypes(Class<?> type) {
     if (type.equals(boolean.class)) {
       return Boolean.class;
     } else if (type.equals(int.class)) {
@@ -233,10 +233,10 @@ abstract class GenericLogger {
   }
 
   public <T> void addSupplier(String key, Class<?> type, Supplier<?> supplier, LogLevel level, boolean once) {
-    type = simplfyPrimTypes(type);
+    type = simplifyPrimTypes(type);
     if (type.isArray()) {
       // Array types
-      Class<?> componentType = type.getComponentType();
+      Class<?> componentType = simplifyPrimTypes(type.getComponentType());
       if (componentType.equals(Byte.class)) {
         if (once) {
           put(key, (byte[]) supplier.get(), level);
