@@ -16,6 +16,9 @@ import java.util.function.Supplier;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.RecordComponent;
 
 abstract class GenericLogger {
     public interface LogRunnable extends LongConsumer {
@@ -238,6 +241,25 @@ abstract class GenericLogger {
 
     }
 
+    public void addRecord(String key, Supplier<?> record, Class<?> type, LogLevel level,
+            boolean once) {
+        var recordComponents = type.getRecordComponents();
+        for (RecordComponent comp : recordComponents) {
+            Method accessor = comp.getAccessor();
+            addSupplier(key + "/" + comp.getName(), comp.getType(), () -> {
+                try {
+                    return accessor.invoke(record.get());
+                } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+                    DriverStation.reportWarning(
+                            type.getName() + " supplier is erroring: " + e.toString(), false);
+                    e.printStackTrace();
+                    return null;
+                }
+            },
+                    level, once);
+        }
+    }
+
     public <T> void addSupplier(String key, Class<?> type, Supplier<?> supplier, LogLevel level, boolean once) {
     if (type.isArray()) {
       // Array types
@@ -351,7 +373,9 @@ abstract class GenericLogger {
         }
       } else if (StructSerializable.class.isAssignableFrom(type)) {
         addGeneric(key, type, supplier, level, once);
-      }
+      } else if (type.isRecord()) {
+                addRecord(key, supplier, type, level, once);
+            }
     }
   }
 }
