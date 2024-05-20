@@ -1,16 +1,12 @@
 package frc.robot;
 
-import static monologue.Annotations.*;
-
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import monologue.Annotations.Log;
 import monologue.Logged;
 
 public class Internal implements Logged {
-
-  @Log
-  static Boolean staticBool = true;
 
   @Log
   SwerveModuleState state = new SwerveModuleState(1, new Rotation2d(0.5));
@@ -26,7 +22,7 @@ public class Internal implements Logged {
   };
 
   @Override
-  public String getPath() {
+  public String getOverrideName() {
     return name;
   }
 

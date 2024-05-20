@@ -47,17 +47,13 @@
         "Translation2d##v_/Robot/structTest": {
           "open": true
         },
-        "Translation2d##v_/Robot/structTestDebug": {
-          "open": true
-        },
         "double[]##v_/Robot/array": {
           "open": true
         },
         "field": {
           "double[]##v_/Robot/field/Robot": {
             "open": true
-          },
-          "open": true
+          }
         },
         "geometry": {
           "Rotation2d##v_/Robot/geometry/getRotation2d": {
@@ -71,10 +67,9 @@
               "open": true
             },
             "open": true
-          },
-          "open": true
+          }
         },
-        "int[]##v_/Robot/array": {
+        "int[]##v_/Robot/arrayPrim": {
           "open": true
         },
         "internals": {
@@ -109,7 +104,8 @@
           },
           "asdfghjklqwertyuiopzxcvbnm,qwertyuio[2]": {
             "open": true
-          }
+          },
+          "open": true
         },
         "open": true
       },

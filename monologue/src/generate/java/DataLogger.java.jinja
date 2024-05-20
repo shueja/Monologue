@@ -1,10 +1,6 @@
 package monologue;
 
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.NTSendable;
-import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
 import edu.wpi.first.util.datalog.*;
-import monologue.NTIntegerArrayLogEntry;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.DataLogManager;
 import java.util.Arrays;
@@ -15,14 +11,16 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 class DataLogger extends GenericLogger {
-    private DataLog log = DataLogManager.getLog();
+    String prefix = "";
+    final DataLog log;
 
     public DataLogger() {
         super();
         DataLogManager.logNetworkTables(false);
-    };
+        log = DataLogManager.getLog();
+    }
 
-    {%for t in types%}
+{%for t in types%}
 
     @Override
     public void put(String entryName, {{t.java.ValueType}} value, LogLevel level)
@@ -30,32 +28,33 @@ class DataLogger extends GenericLogger {
         if (level == LogLevel.NOT_FILE_ONLY && Monologue.isFileOnly()) {
             return;
         }
-        {%if t.java.ValueType == 'String'%}
+{%if t.java.ValueType == 'String'%}
         if (value == null) {return;}
-        {%endif%}
-        {%if t.java.IsArray%}
+{%endif%}
+{%if t.java.IsArray%}
         if (value == null) {return;}
-        {%endif%}
+{%endif%}
 {%if t.TypeName == 'IntegerArray'%}
-        new NTIntegerArrayLogEntry(log, "NT:" + entryName)
+        new IntegerArrayLogEntry(log, prefix + entryName)
             .append(toLongArray(value));
 {%elif t.TypeName == 'LongArray'%}
-        new NTIntegerArrayLogEntry(log, "NT:" + entryName)
+        new IntegerArrayLogEntry(log, prefix + entryName)
         .append(value);
 {%else%}
-        new {{t.java.EntryName}}LogEntry(log, "NT:" + entryName).append(value);
+        new {{t.java.EntryName}}LogEntry(log, prefix + entryName).append(value);
 {%endif%}
     }
 
     @Override
-    public void add{{t.TypeName}}(String entryName,
-    {{t.java.Supplier}}valueSupplier,
-    LogLevel level)
-    {   
+    public void add{{t.TypeName}}(
+        String entryName,
+        {{t.java.Supplier}}valueSupplier,
+        LogLevel level
+    ) {
         {%if t.TypeName == 'IntegerArray' or t.TypeName == 'LongArray'%}
-        var entry = new NTIntegerArrayLogEntry(log, "NT:" + entryName);
+        var entry = new IntegerArrayLogEntry(log, prefix + entryName);
 {%else %}
-        var entry = new {{t.java.EntryName}}LogEntry(log, "NT:" + entryName);
+        var entry = new {{t.java.EntryName}}LogEntry(log, prefix + entryName);
 {%endif%}
         LongConsumer consumer;
 {%if t.TypeName == 'IntegerArray'%}
@@ -101,7 +100,7 @@ class DataLogger extends GenericLogger {
                     if (!(Arrays.deepEquals(value, lastValue))) {
 {%else%}
                     if (!(Arrays.equals(value, lastValue))) {
-    {%endif%}
+{%endif%}
                         entry.append(value, timestamp);
                         if (lastValue.length != value.length) {
                             lastValue = new {{t.java.ComponentType}}[value.length];
@@ -140,9 +139,9 @@ class DataLogger extends GenericLogger {
         } else {
             consumer = (timestamp) -> {
                 var value = valueSupplier.get();
-                {%if t.java.ValueType == 'String'%}
+{%if t.java.ValueType == 'String'%}
                 if (value == null) {return;}
-                {%endif%}
+{%endif%}
                 entry.append(value, timestamp);
             };
         }
@@ -167,27 +166,11 @@ class DataLogger extends GenericLogger {
     }
 
     @Override
-    public void addSendable(String path, NTSendable sendable) {
-        if (sendable == null) {
-            return;
-        }
-        var table = NetworkTableInstance.getDefault().getTable(path);
-        var builder = new SendableBuilderImpl();
-        builder.setTable(table);
-        sendable.initSendable(builder);
-        builder.startListeners();
-        table.getEntry(".controllable").setBoolean(false);
-        sendables.add(builder);
-        NetworkTableInstance.getDefault().startEntryDataLog(DataLogManager.getLog(), path, "NT:" + path);
-    }
-
-
-    @Override
     public <R> void addStruct(String entryName, Struct<R> struct, Supplier<? extends R> valueSupplier, LogLevel level) {
         LongConsumer consumer;
 
         if (this.isLazy()) {
-            var entryHandle = log.start("NT:" + entryName, struct.getTypeString(), "", 0);
+            var entryHandle = log.start(prefix + entryName, struct.getTypeString(), "", 0);
             log.addSchema(struct, 0);
             int size = struct.getSize();
             consumer = new LongConsumer() {
@@ -215,7 +198,7 @@ class DataLogger extends GenericLogger {
                 }
             };
         } else {
-            var entry = StructLogEntry.create(log, "NT:" + entryName, struct);
+            var entry = StructLogEntry.create(log, prefix + entryName, struct);
             consumer = (timestamp) -> {
                 var value = valueSupplier.get();
                 if (value == null) {
@@ -236,7 +219,7 @@ class DataLogger extends GenericLogger {
         LongConsumer consumer;
 
         if (this.isLazy()) {
-            var entryHandle = log.start("NT:" + entryName, struct.getTypeString()+"[]", "", 0);
+            var entryHandle = log.start(prefix + entryName, struct.getTypeString()+"[]", "", 0);
             log.addSchema(struct, 0);
             int size = struct.getSize();
             consumer = new LongConsumer() {
@@ -276,7 +259,7 @@ class DataLogger extends GenericLogger {
                 }
             };
         } else {
-            var entry = StructArrayLogEntry.create(log, "NT:" + entryName, struct);
+            var entry = StructArrayLogEntry.create(log, prefix + entryName, struct);
             consumer = (timestamp) -> {
                 var value = valueSupplier.get();
                 if (value == null) {
@@ -301,7 +284,7 @@ class DataLogger extends GenericLogger {
             return;
         }
 
-        StructLogEntry.create(log, "NT:" + entryName, struct).append(value);
+        StructLogEntry.create(log, prefix + entryName, struct).append(value);
     }
 
     @Override
@@ -312,7 +295,7 @@ class DataLogger extends GenericLogger {
         if (value == null) {
             return;
         }
-        StructArrayLogEntry.create(log, "NT:" + entryName, struct).append(value);
+        StructArrayLogEntry.create(log, prefix + entryName, struct).append(value);
     }
 
     @Override

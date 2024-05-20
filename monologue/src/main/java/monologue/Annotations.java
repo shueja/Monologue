@@ -1,15 +1,28 @@
 package monologue;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+@SuppressWarnings("unchecked")
 public class Annotations {
+  static final Class<? extends Annotation>[] ALL_ANNOTATIONS =
+      new Class[] {
+        Log.class,
+        Log.Once.class,
+        Log.File.class,
+        Log.File.Once.class,
+        Log.NT.class,
+        Log.NT.Once.class
+      };
 
   /**
    * Logs the annotated field/method to NetworkTables if inside a {@link Logged} class.
+   *
+   * <p>Static fields and methods will emit a warning and not be logged.
    *
    * @param key [optional] the key to log the variable as. If empty, the key will be the name of the
    *     field/method
@@ -126,4 +139,14 @@ public class Annotations {
   @Retention(RetentionPolicy.RUNTIME)
   @Target({ElementType.FIELD})
   public @interface IgnoreLogged {}
+
+  // Not ready yet
+  // /**
+  //  * Will cause the internal fields of the annotated field to be logged as if they were fields of
+  //  * the object this field is in. This is useful for flattening complex objects into a single path.
+  //  */
+  // @Documented
+  // @Retention(RetentionPolicy.RUNTIME)
+  // @Target({ElementType.FIELD})
+  // public @interface FlattenedLogged {}
 }
