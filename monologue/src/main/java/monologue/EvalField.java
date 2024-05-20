@@ -94,7 +94,8 @@ class EvalField {
       }
     } else if (Collection.class.isAssignableFrom(field.getType())) {
       int idx = 0;
-      // Include all elements whose runtime class is Loggable
+      // Include all elements whose runtime class is Logged
+
       for (Object obj : (Collection<?>) fieldOptional.get()) {
         if (obj instanceof Logged) {
           String pathOverride = ((Logged) obj).getOverrideName();
