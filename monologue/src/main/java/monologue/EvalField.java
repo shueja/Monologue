@@ -77,7 +77,8 @@ class EvalField {
               rootPath + "." + field.getName() + " is reccomended to be final for logging");
         }
         int idx = 0;
-        // Include all elements whose runtime class is Loggable
+        // Include all elements whose runtime class is Logged
+
         for (Object obj : (Object[]) fieldOptional.get()) {
           if (obj instanceof Logged) {
             String pathOverride = ((Logged) obj).getOverrideName();
