@@ -30,6 +30,10 @@ import java.util.List;
 
 
 public class Robot extends TimedRobot implements Logged {
+  public record Inputs(double rpm, boolean isReady){}
+
+  @Log
+  Inputs inputs = new Inputs(10, false);
   @Log.Once private boolean flippingBool = false;
   private int samples = 0;
   @Log(level = NOT_FILE_ONLY) int debugSamples = 0;
@@ -96,6 +100,7 @@ public class Robot extends TimedRobot implements Logged {
     compSamples++;
     flippingBool = !flippingBool;
     Internal.staticBool = !Internal.staticBool;
+    inputs = new Inputs(samples, flippingBool);
     translation2d = new Translation2d(
       (Math.random()+0.55) * translation2d.getX(),
       (Math.random()+0.55) * translation2d.getY()
