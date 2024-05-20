@@ -68,7 +68,8 @@ public class Robot extends TimedRobot implements Logged {
   @Log private Field2d field = new Field2d();
 
   @Log private Mechanism2d mech = new Mechanism2d(1, 1);
-  @Log.NT private int[] array = {0, 1, 2};
+  @Log.NT private int[] arrayPrim = {0, 1, 2};
+  @Log.NT private int[] arrayBoxed = {0, 1, 2};
   @Log.File private int number = 0;
   @Log.File.Once String onceFile = "test";
 
