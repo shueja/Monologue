@@ -153,7 +153,8 @@ class EvalField {
     if (logType == LogType.File) {
       if (NTSendable.class.isAssignableFrom(type)) {
         MonologueLog.runtimeWarn(
-            "NTSendable isn't supported for file logging: " + rootPath + "." + field.getName());
+            "NTSendable isn't supported for @Log.File, use @Log or @Log.NT instead: " + rootPath + "." + field.getName());
+
         Monologue.ntLogger.addSendable(key, (NTSendable) getField(field, loggable).get());
       } else if (Sendable.class.isAssignableFrom(type)) {
         Monologue.dataLogger.addSendable(key, (Sendable) getField(field, loggable).get());
