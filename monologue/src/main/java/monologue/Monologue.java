@@ -70,7 +70,8 @@ public class Monologue extends GlobalLogged {
     public MonologueConfig {
       if (fileOnly == null) {
         MonologueLog.runtimeWarn(
-            "fileOnly cannot be null in MonologueConfig, falling back to false");
+            "fileOnly cannot be null in MonologueConfig, falling back to false (always log NT)");
+
         fileOnly = () -> false;
       }
       if (datalogPrefix == null) {
