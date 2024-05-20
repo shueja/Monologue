@@ -35,7 +35,7 @@ import java.util.function.BooleanSupplier;
  * #setupMonologueDisabled(Logged, String, boolean)} to disable logging and only run the error
  * checking.
  */
-public class Monologue {
+public class Monologue extends GlobalLogged {
 
   static {
     // we need to make sure we never log network tables through the implicit wpilib logger
@@ -181,7 +181,7 @@ public class Monologue {
     Monologue.config = config;
     HAS_SETUP_BEEN_CALLED = true;
     rootpath = NetworkTable.normalizeKey(rootpath, true);
-    MonoDashboard.setRootPath(rootpath);
+    Monologue.setRootPath(rootpath);
     MonologueLog.runtimeLog(
         "Monologue.setupMonologue() called on "
             + loggable.getClass().getName()
@@ -259,9 +259,8 @@ public class Monologue {
    *
    * @param loggable the obj to scrape
    * @param path the path to log to
-   * 
-   * @throws IllegalStateException Make sure {@link #setupMonologue()} or
-   *  {@link #setupMonologueDisabled()} is called first
+   * @throws IllegalStateException Make sure {@link #setupMonologue()} or {@link
+   *     #setupMonologueDisabled()} is called first
    */
   public static void logObj(Logged loggable, String path) {
     if (!hasBeenSetup())
