@@ -176,6 +176,5 @@ class EvalField {
         }
       }
     }
-    return;
   }
 }
