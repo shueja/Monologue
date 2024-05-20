@@ -140,12 +140,13 @@ public class Annotations {
   @Target({ElementType.FIELD})
   public @interface IgnoreLogged {}
 
-  /**
-   * Will cause the internal fields of the annotated field to be logged as if they were fields of
-   * the object this field is in. This is useful for flattening complex objects into a single path.
-   */
-  @Documented
-  @Retention(RetentionPolicy.RUNTIME)
-  @Target({ElementType.FIELD})
-  public @interface FlattenedLogged {}
+  // Not ready yet
+  // /**
+  //  * Will cause the internal fields of the annotated field to be logged as if they were fields of
+  //  * the object this field is in. This is useful for flattening complex objects into a single path.
+  //  */
+  // @Documented
+  // @Retention(RetentionPolicy.RUNTIME)
+  // @Target({ElementType.FIELD})
+  // public @interface FlattenedLogged {}
 }
